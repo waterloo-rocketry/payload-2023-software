@@ -25,7 +25,6 @@ unsigned long now;
 unsigned long rc_update;
 
 // Receiver variables
-
 const int channels = 3; // receiver channles
 float rc_in[channels]; // calibrated inputs from receiver
 const uint8_t CHANNEL = 3; // channel to control motor
@@ -33,12 +32,15 @@ const bool PRINT = false; // debug bool
 String filename = "test_2022_04_22.txt"; // SD card filename
 File datalog;
 
+
+
 void setup() {
   if(PRINT)
     Serial.begin(115200);
 
   setup_error();
   setup_pwm_read();
+  //setup_encoder();
 
   if(!setup_IMU())
     print_error("IMU Disconnected");

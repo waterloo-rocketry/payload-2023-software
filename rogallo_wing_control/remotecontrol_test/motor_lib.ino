@@ -1,3 +1,7 @@
+
+
+
+
 int32_t calc_speed(uint8_t CH){
   float new_speed = 255*rc_in[CH-1];
   if (PRINT) {
@@ -14,9 +18,10 @@ int32_t calc_speed(uint8_t CH){
 }
 
 void set_motor_speed() {
+  int16_t new_speed = calc_speed(CHANNEL); 
   // MIXING ON
   if (servo_mix_on == true)
-    int16_t new_speed = calc_speed(CHANNEL); 
+     new_speed = calc_speed(CHANNEL); 
   
   if (PRINT) {
     Serial.print("Step width: "); 
