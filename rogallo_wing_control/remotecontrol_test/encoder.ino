@@ -1,31 +1,32 @@
 #include <Encoder.h>
 
-Encoder enc(5, 6);
+/*
+Please keep in mind that performance changes depending on
+whether or not you're using interrupt pins. Just look at the
+datasheet if unclear about it.
+*/
+const int inputA = 5;
+const int inputB = 6;
+
+// there are no constraints on the output pin
 const int outputPin = 12;
 
-#if defined(__AVR__) || defined(TEENSYDUINO)
-#define REGTYPE unsigned char
-#else
-#define REGTYPE unsigned long
-#endif
+// initialize pins and return Encoder object
+Encoder setup_encoder() {
+    pinMode(inputA, INPUT);
+    pinMode(inputB, INPUT);
+    pinMode(outputPin, OUTPUT);
 
-void setup() {
-  pinMode(5, INPUT);
-  pinMode(6, INPUT);
-  pinMode(outputPin, OUTPUT);
+    Encoder enc(5, 6);
+
+    return enc;
 }
 
-void loop() {
-  volatile int count = 0;
-  volatile REGTYPE *reg = portOutputRegister(digitalPinToPort(outputPin));
-  REGTYPE mask = digitalPinToBitMask(outputPin);
+long encoder_position(Encoder enc, long oldPosition) {
+    long currentPosition = enc.read();
 
-  while (1) {
-    enc.read();
-    noInterrupts();
-    *reg |= mask;
-    count = count + 1;
-    *reg &= ~mask;
-    interrupts();
-  }
+    if (currentPosition != oldPosition)
+        oldPosition = currentPosition;
+
+    return currentPosition;
 }
