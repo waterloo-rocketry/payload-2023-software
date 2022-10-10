@@ -15,40 +15,53 @@ significant bit) at this FS setting, so the raw reading of
 SDA - A4
 SCL - A5
 */
+#include "imu_lib.h"
 
-
-LSM6 imu;
 
 char report[80];
 
 bool setup_IMU()
 {
-  //Serial.begin(9600);
   Wire.begin();
 
-  uint8_t timeout = 0;
-  while (!imu.init() && timeout < 200)
+  delay(1500);
+  
+  IMU_init();
+
+  delay(20);
+
+  for(int i=0;i<32;i++)    // We take some readings...
+    {
+    Read_Gyro();
+    Read_Accel();
+    for(int y=0; y<6; y++)   // Cumulate values
+      AN_OFFSET[y] += AN[y];
+    delay(20);
+    }
+
+  for(int y=0; y<6; y++)
+  AN_OFFSET[y] = AN_OFFSET[y]/32;
+  AN_OFFSET[5]-=GRAVITY*SENSOR_SIGN[5];
+
+  if(PRINT)
   {
-    if(PRINT && timeout == 0)
-      Serial.println("Failed to detect and initialize IMU!");
-    timeout ++;
+    Serial.println("Offset:");
+    for(int y=0; y<6; y++)
+      Serial.println(AN_OFFSET[y]);
   }
-  
-  if(timeout > 199)
-    return false;
-  
-  imu.enableDefault();
-  return true;
+
+  delay(2000);
  
 }
 
 void get_IMU_data()
 {
-  imu.read();
-
-  snprintf(report, sizeof(report), "A: %6d %6d %6d    G: %6d %6d %6d",
-    imu.a.x, imu.a.y, imu.a.z,
-    imu.g.x, imu.g.y, imu.g.z);
+    Read_IMU();
+  
+    snprintf(report, sizeof(report), "Accel: X: %6d Y: %6d Z: %6d    Gyro: X: %6d Y: %6d Z: %6d, Comp: X: %6d Y: %6d Z: %6d",
+    accel_x, accel_y , accel_z,
+    gyro_x, gyro_y, gyro_z,
+    magnetom_x, magnetom_y, magnetom_z);
 
   if(PRINT)
     Serial.println(report);
