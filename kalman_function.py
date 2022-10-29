@@ -1,8 +1,71 @@
+import numpy as np
 import time
 
-import numpy as np
-# see https://numpy.org/doc/stable/numpy-user.pdf
-from scipy import *
+
+# workflow looks something like:
+# 1. define static matrices (R,Q, etc)
+# 2. define intial values for time-dependent matrices (x, F, etc)
+# 3. create filter object
+# 4. call filter init method
+# 5. begin mainloop
+# 6. get sys time
+
+# 1.1. Get current time
+# 1.2. Get delta t
+
+class Kalman:
+    def __init__(self, dim_x, dim_z, dim_u):
+        self.x = np.zeros((dim_x, 1))
+        self.F = np.zeros((dim_x, dim_x))
+        self.u = np.zeros((dim_u, 1))
+        self.G = np.zeros((dim_x, dim_u))
+        self.P = np.zeros((dim_x, dim_x))
+        self.Q = np.zeros((dim_x, dim_x))
+
+        self.z = np.zeros((dim_z, 1))
+        self.R = np.zeros((dim_z, dim_z))
+        self.H = np.zeros((dim_z, dim_x))
+
+        for n in range(self.x.shape[0]):
+            self.x[n] = 1
+
+    def __repr__(self):
+        self.x
+
+    def initialize(self, x_0, F_0, G_0, P_0, Q_0, R_0, H_0):
+        self.x = x_0
+        self.F = F_0
+        self.G = G_0
+        self.P = P_0
+        self.Q = Q_0
+        self.R = R_0
+        self.H = H_0
+
+    def iterate(self, z, u, F=None, G=None, Q=None):
+        # x and P are off limits, z is required, R shouldn't change. H also probably shouldn't change in our case
+
+        if F is not None:
+            self.F = F
+        if G is not None:
+            self.G = G
+        if Q is not None:
+            self.Q = Q
+
+        x_B = self.F * self.x + self.G * u
+        P_B = self.F * self.P * self.F.T + self.Q
+
+        KG = P_B * self.H.T * np.invert(self.H * P_B * self.H.T + self.R)
+
+        x_A = x_B + KG * (z - self.H * x_B)
+        P_A = P_B - KG * self.H * P_B
+
+        self.x = x_A
+        self.P = P_A
+
+        return self.x
+
+
+# testing fun times #1
 
 # two state variable implementation of a standard kalman filter for yaw angle and angular momentum (LSM6DS33 IMU chip)
 # prediction eqns: x(t+1) = F*x(t) + G*u(t); P(t+1) = F*P(t)*F' + Q
@@ -50,8 +113,7 @@ Q = np.array([0, 0],
 # here, our state is in degrees and dps, and since we're simulating everything, we just choose our control input to
 # also be in degrees - hence G is just the vector [1, 0]
 
-G = np.array([1, 0]).transpose()
-
+G = np.array([1, 0]).T
 
 # H defines the transformation from x-space to z-space. Since our z is a 1x1 vector representing angular velocity
 # (in dps as expected), and x contains both angle and angular velocity, H is defined as:
@@ -59,63 +121,36 @@ G = np.array([1, 0]).transpose()
 H = np.array([0, 1])
 
 
-def dynamic_matrices(d_t):
-    # F contains the model information. The current angle is equal to the last angle plus the angular velocity
-    # integrated over time (that is, multiplied by the discrete time step, d_t)
+# this is where the fun begins
 
 
-    return (F,)
+def get_gyro_data():
+    return 0
 
 
-def get_gyro_yaw_velocity():
-    return 69.420
-
-
-def kalman_iteration(d_t, x_old, P_old, G, u, Q, R, H):
-    F = dynamic_matrices(d_t)[0]
-    z = get_gyro_yaw_velocity()
-
-    x_b = F*x_old + G*u
-    P_b = F*P*F.T + Q
-
-    K = P*H.T * np.invert(H*P*H.T + R)
-
-    x_a = x_b + K*(z - H*x_b)
-    P_a = (np.identity(2)-K*H)*P_b
-
-    return (x_a, P_a)
-
-
-
-
-# define initial values
-# the intial value of P represents the accuracy of our intial estiamtion of x
-# specifically, it is the covariance matrix of x1, x2......
-# lets say one std deviation on our absolute angle is 1 degree. then our variance for x1 is 1^2 = 1
-# we are a lot more confident that our sensor is not spinning intially, than we are that it is
-# pointing at exactly 0 degrees, and we set it up accordingly
-
-x = np.array([0, 0]).transpose()
+x = np.zeros((2, 1))
+F = np.zeroes((2, 2))
 P = np.array([1**2, 0],
              [0, 0.25**2])
+u = 0
+k = Kalman(2, 1, 1)
 
-t_total = 0
-d_t = 0
 t_last = time.time()
-duration = 5000
-u_flag = False
+dt = 0
+sum_t = 0
+results = []
 
-while(t_total < duration):
-    d_t = time.time() - t_last
-    t_total += d_t
+k.initialize(x, F, G, P, Q, R, H)
 
-    u = 0
-    if t_total >= 1000 and not u_flag:
-        u = 90
-        u_flag = True
+while sum_t < 60:
+    t = time.time()
+    dt = t - t_last
+    t_last = t
+    sum_t += dt
 
-    x, P = kalman_iteration(d_t, x, P, G, Q, R, H)
-    print(x, P)
+    F = np.array([1, dt],
+                 [0, 1])
 
-
-
+    x = k.iterate(get_gyro_data(), 0, F=F)
+    print(x)
+    results.append([sum_t, x])
