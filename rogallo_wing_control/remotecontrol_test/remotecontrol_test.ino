@@ -57,11 +57,11 @@ void loop() {
   //get_rc_command();
   //get_motor_speed();
   //get_IMU_data();
-motor.setSpeed(50);
+motor.setSpeed(150);
 delay(10);
 motor.setSpeed(0); 
   NewPosition = encoder_position (enc,OldPosition);
-  OldPosition = NewPosition;
+  // OldPosition = NewPosition;
   Serial.println (NewPosition);
   //get_gps();
   //set_motor_speed();

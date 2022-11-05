@@ -14,19 +14,18 @@ const int outputPin = 12;
 
 // initialize pins and return Encoder object
 Encoder setup_encoder() {
-    pinMode(inputA, INPUT);
-    pinMode(inputB, INPUT);
-    pinMode(outputPin, OUTPUT);
+  pinMode(inputA, INPUT);
+  pinMode(inputB, INPUT);
+  pinMode(outputPin, OUTPUT);
 
-    Encoder enc(inputB, inputA);
+  Encoder enc(inputB, inputA);
 
-    return enc;
+  return enc;
 }
 
-int32_t encoder_position(Encoder enc, int32_t oldPosition) {
+int32_t encoder_position(Encoder &enc, int32_t &oldPosition) {
   int32_t currentPosition = enc.read();
-    if (currentPosition != oldPosition)
-        oldPosition = currentPosition;
-    return currentPosition;
+  if (currentPosition != oldPosition)
+    oldPosition = currentPosition;
+  return currentPosition;
 }
-
