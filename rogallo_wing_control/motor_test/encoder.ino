@@ -23,6 +23,10 @@ Encoder setup_encoder() {
   return enc;
 }
 
+/*
+Call by reference the encoder and the oldPosition, which will
+be overwritten with each loop
+*/
 int32_t encoder_position(Encoder &enc, int32_t &oldPosition) {
   int32_t currentPosition = enc.read();
   if (currentPosition != oldPosition)
