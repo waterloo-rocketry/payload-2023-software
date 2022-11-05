@@ -5,7 +5,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-
 // Configure the motor driver.
 CytronMD motor(PWM_DIR, 9, 8);  // PWM = Pin 9, DIR = Pin 9.
 
@@ -28,7 +27,7 @@ unsigned long rc_update;
 const int channels = 3; // receiver channles
 float rc_in[channels]; // calibrated inputs from receiver
 const uint8_t CHANNEL = 3; // channel to control motor
-const bool PRINT = false; // debug bool
+const bool PRINT = true; // debug bool
 String filename = "test_2022_04_22.txt"; // SD card filename
 File datalog;
 
@@ -37,20 +36,22 @@ File datalog;
 void setup() {
   if(PRINT)
     Serial.begin(115200);
-
-  setup_error();
-  setup_pwm_read();
+    //setup_error();
+  //setup_pwm_read();
   //setup_encoder();
 
-  if(!setup_IMU())
-    print_error("IMU Disconnected");
+  if(!setup_IMU()){
+    Serial.println("No IMU");
+    //print("IMU nothere");
+    //print_error("IMU Disconnected");
+  }
 }
 
 void loop() {  
-  get_rc_command();
-  get_motor_speed();
+  //get_rc_command();
+  //get_motor_speed();
   get_IMU_data();
-  get_gps();
-  set_motor_speed();
-  save_sd_data();
+  //get_gps();
+  //set_motor_speed();
+  //save_sd_data();
 }

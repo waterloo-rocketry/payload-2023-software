@@ -1,4 +1,4 @@
-#include <Encoder.h>
+/*#include <Encoder.h>
 
 Encoder enc(5, 6);
 const int outputPin = 12;
@@ -29,3 +29,4 @@ void loop() {
     interrupts();
   }
 }
+*/

@@ -1,4 +1,4 @@
-bool setup_sd() 
+/*bool setup_sd() 
 {
   
   uint8_t timeout = 0;
@@ -16,11 +16,11 @@ bool setup_sd()
   datalog = SD.open(filename, FILE_WRITE);
   if (datalog) {
     if(datalog.available())
-      print_error("File not empty");
+      //print_error("File not empty");
     datalog.println(filename);
   }
   else
-    print_error("Can't open file");
+    //print_error("Can't open file");
     
   datalog.close();
 
@@ -31,4 +31,6 @@ void save_sd_data()
 {
   if(PRINT)
     Serial.print("Saving SD data");
+
 }
+*/

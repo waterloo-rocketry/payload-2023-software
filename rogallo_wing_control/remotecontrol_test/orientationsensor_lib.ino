@@ -18,7 +18,7 @@ SCL - A5
 #include "imu_lib.h"
 
 
-char report[80];
+char report[160];
 
 bool setup_IMU()
 {
@@ -58,7 +58,14 @@ void get_IMU_data()
 {
     Read_IMU();
   
+    /*
     snprintf(report, sizeof(report), "Accel: X: %6d Y: %6d Z: %6d    Gyro: X: %6d Y: %6d Z: %6d, Comp: X: %6d Y: %6d Z: %6d",
+    accel_x, accel_y , accel_z,
+    gyro_x, gyro_y, gyro_z,
+    magnetom_x, magnetom_y, magnetom_z);
+*/
+
+snprintf(report, sizeof(report), "%6d,%6d,%6d,%6d,%6d,%6d,%6d,%6d,%6d",
     accel_x, accel_y , accel_z,
     gyro_x, gyro_y, gyro_z,
     magnetom_x, magnetom_y, magnetom_z);

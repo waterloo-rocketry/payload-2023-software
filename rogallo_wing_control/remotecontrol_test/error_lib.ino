@@ -1,6 +1,6 @@
 uint8_t errorcount = 0;
 
-void setup_error() {
+void setup_error(){
       pinMode(LED_BUILTIN, OUTPUT);
 }
 
