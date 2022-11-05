@@ -4,9 +4,10 @@
 #include <LSM6.h> 		// Orientation sensing IMU
 #include <SPI.h>
 #include <SD.h>
+#include <Encoder.h>
 
 // Configure the motor driver.
-CytronMD motor(PWM_DIR, 9, 8);  // PWM = Pin 9, DIR = Pin 9.
+CytronMD motor(PWM_DIR, 9, 8);  // PWM = Pin 9, DIR = Pin 8.
 
 
 // Select Servo Direction, Rates and Sub-atrim (the size of each array must match the number of servos)
@@ -40,18 +41,31 @@ void setup() {
   //setup_pwm_read();
   //setup_encoder();
 
-  if(!setup_IMU()){
+ /* if(!setup_IMU()){
     Serial.println("No IMU");
     //print("IMU nothere");
     //print_error("IMU Disconnected");
   }
+  */
 }
+
+ Encoder enc = setup_encoder ();
+ int32_t OldPosition = 0;
+int32_t NewPosition = 0;
 
 void loop() {  
   //get_rc_command();
   //get_motor_speed();
-  get_IMU_data();
+  //get_IMU_data();
+motor.setSpeed(50);
+delay(10);
+motor.setSpeed(0); 
+  NewPosition = encoder_position (enc,OldPosition);
+  OldPosition = NewPosition;
+  Serial.println (NewPosition);
   //get_gps();
   //set_motor_speed();
   //save_sd_data();
 }
+
+
