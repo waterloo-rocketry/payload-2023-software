@@ -1,8 +1,21 @@
 import time
 
+import numpy
 import numpy as np
-# see https://numpy.org/doc/stable/numpy-user.pdf
-from scipy import *
+import pandas as pd
+
+from kalman_function import Kalman
+
+#needs to grab live gyro data and return a 1x1 vextor containing angular velocity in the target axis
+def get_gyro_data():
+    pass
+
+#u is the control vairable - hard to be accurate in manual testing, will probably need to add time parameter and
+# have user rotate the device as accurately as possible - consider setting up a motor to do this?
+def get_u():
+    pass
+
+# testing fun times #1
 
 # two state variable implementation of a standard kalman filter for yaw angle and angular momentum (LSM6DS33 IMU chip)
 # prediction eqns: x(t+1) = F*x(t) + G*u(t); P(t+1) = F*P(t)*F' + Q
@@ -16,7 +29,7 @@ from scipy import *
 # datasheet specifies a zero-rate offset (that is, how fast the gyro will say its rotating when its actually
 # rotating at 0 deg/s) of +/- 10 dps, which is pretty standard (this is one of the places where gyros suck and why
 # we want to filter their data in the first place) so that will be our R value
-R = 10
+R = np.array(10)
 
 # digestiable info on how to calculate noise is pretty bad, buuuut
 # https://ez.analog.com/mems/f/q-a/81960/gyros-rate-noise-density this guy gives us some equations
@@ -32,8 +45,8 @@ R = 10
 # (im calling the noise for the angle measurement 0 here, since any error will come from a combination of angular
 # momentum encapsulated in q[1][1] and measurment error encapsulated in R )
 
-Q = np.array([0, 0],
-             [0, .361])
+Q = np.array([[0, 0],
+             [0, .361]])
 
 # u is the "control input" - we use it to tell the model when we are applying a known external disturbance
 # to the system, so that it sees it coming. otherwise our measurement device will essentially spike, but our model
@@ -50,72 +63,46 @@ Q = np.array([0, 0],
 # here, our state is in degrees and dps, and since we're simulating everything, we just choose our control input to
 # also be in degrees - hence G is just the vector [1, 0]
 
-G = np.array([1, 0]).transpose()
-
+G = np.array([[1, 0]]).T
 
 # H defines the transformation from x-space to z-space. Since our z is a 1x1 vector representing angular velocity
 # (in dps as expected), and x contains both angle and angular velocity, H is defined as:
 
-H = np.array([0, 1])
-
-
-def dynamic_matrices(d_t):
-    # F contains the model information. The current angle is equal to the last angle plus the angular velocity
-    # integrated over time (that is, multiplied by the discrete time step, d_t)
-
-
-    return (F,)
-
-
-def get_gyro_yaw_velocity():
-    return 69.420
-
-
-def kalman_iteration(d_t, x_old, P_old, G, u, Q, R, H):
-    F = dynamic_matrices(d_t)[0]
-    z = get_gyro_yaw_velocity()
-
-    x_b = F*x_old + G*u
-    P_b = F*P*F.T + Q
-
-    K = P*H.T * np.invert(H*P*H.T + R)
-
-    x_a = x_b + K*(z - H*x_b)
-    P_a = (np.identity(2)-K*H)*P_b
-
-    return (x_a, P_a)
+H = np.array([[0, 1]])
 
 
 
+x = np.zeros((2, 1))
+F = np.zeros((2, 2))
+P = np.array([[1**2, 0],
+              [0, 0.25**2]])
 
-# define initial values
-# the intial value of P represents the accuracy of our intial estiamtion of x
-# specifically, it is the covariance matrix of x1, x2......
-# lets say one std deviation on our absolute angle is 1 degree. then our variance for x1 is 1^2 = 1
-# we are a lot more confident that our sensor is not spinning intially, than we are that it is
-# pointing at exactly 0 degrees, and we set it up accordingly
+k = Kalman(2, 1, 1)
 
-x = np.array([0, 0]).transpose()
-P = np.array([1**2, 0],
-             [0, 0.25**2])
+x[1] = get_gyro_data()
 
-t_total = 0
-d_t = 0
-t_last = time.time()
-duration = 5000
-u_flag = False
+t_last = time.time_ns() / (10 ** 9)
+dt = 0
+sum_t = 0
+results_x = []
+results_time = []
 
-while(t_total < duration):
-    d_t = time.time() - t_last
-    t_total += d_t
+k.initialize(x, F, G, P, Q, R, H)
 
-    u = 0
-    if t_total >= 1000 and not u_flag:
-        u = 90
-        u_flag = True
+while 1:
+    t = time.time_ns() / (10 ** 9)
+    dt = t - t_last
+    t_last = t
+    sum_t += dt
 
-    x, P = kalman_iteration(d_t, x, P, G, Q, R, H)
-    print(x, P)
+    F = np.array([[1, dt],
+                 [0, 1]])
+
+    x = k.iterate(get_gyro_data(), get_u(), F=F)
+    results_time.append(sum_t)
+    results_x.append(x)
+
+#plot x vs time elapsed
 
 
 
