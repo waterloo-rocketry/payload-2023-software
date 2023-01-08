@@ -1,4 +1,8 @@
+
+*.bkp
+
 # MPLAB X
+
 *.d
 *.pre
 *.p1
@@ -21,5 +25,3 @@ funclist
 nbproject/Makefile-*
 disassembly/
 *.map
-*.bkp
-
