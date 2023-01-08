@@ -1,0 +1,3 @@
+[submodule "state estimation/kalman_board.X/canlib"]
+	path = state estimation/kalman_board.X/canlib
+	url = https://github.com/waterloo-rocketry/canlib.git
