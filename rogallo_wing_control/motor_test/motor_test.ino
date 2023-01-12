@@ -18,7 +18,8 @@ CytronMD motor(PWM_DIR, 9, 8);  // PWM = Pin 9, DIR = Pin 8.
 
 
 const bool PRINT = true; // debug bool
-
+const double pulley_dia = 7.0;
+int32_t set_dist = 1000; //set point for distance for string to travel
 
 void setup() {
   if(PRINT)
@@ -36,20 +37,23 @@ void setup() {
 }
 
  Encoder enc = setup_encoder ();
- int32_t OldPosition = 0;
- int32_t NewPosition = 0;
+/*
+ * volatile int8_t SPEED = 0;
+volatile bool CALC_PID = false;
+int32_t old_pos = 0; 
+int32_t prev_error = 0;
+int32_t integral = 0;
+ */
 
 void loop() {  
-  //get_motor_speed();
-  //get_IMU_data();
-motor.setSpeed(150);
-delay(10);
-motor.setSpeed(0); 
-  NewPosition = encoder_position (enc,OldPosition);
-  Serial.println (NewPosition);
-  //get_gps();
-  //set_motor_speed();
-  //save_sd_data();
+  calc_pid(CALC_PID);
+  Serial.print("PID Speed:");
+  Serial.print(SPEED);
+  Serial.print("Current position: ");
+  Serial.print(old_pos);
+  Serial.print("Previous error: ");
+  Serial.print(prev_error);
+  Serial.print("Integral: ");
+  Serial.print(integral);
+  Serial.println();
 }
-
-
