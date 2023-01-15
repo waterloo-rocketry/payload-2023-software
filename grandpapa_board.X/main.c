@@ -51,6 +51,16 @@ void main(void) {
      * 
      */
     
+    uint8_t max_time;
+    
+    
+    //Initialize Stuff w/ Functions
+    can_init();
+    
+    while(1){
+        
+    }
+    
     
     return;
 }
