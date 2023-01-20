@@ -40,7 +40,7 @@
 double** matrix_addition(double** A, double ** B, int sizeX, int sizeY);
 double** scalar_multiplication(double** A, double B, int sizeX, int sizeY);
 double* vector_multiplication(double** A, double* B, int sizeX, int sizeY, int sizeV);
-double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY);
+double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY, int* sizeReturn);
 
 /* Provide C++ Compatibility */
 #ifdef __cplusplus

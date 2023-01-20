@@ -1,4 +1,5 @@
 #include "kalman_lib.h"
+#include <stdio.h>
 
 /* ************************************************************************** */
 /** Descriptive File Name
@@ -180,18 +181,21 @@ double* vector_multiplication(double** A, double* B, int sizeX, int sizeY, int s
     return result;
 }
 
-double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY){
+double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY, int* sizeReturn){
     if (AsizeY != BsizeX){
         return NULL;
+    }
+    else {
+        sizeReturn[0] = AsizeX;
+        sizeReturn[1] = BsizeY;
     }
     double ** result = (double **) malloc (AsizeX * sizeof(double*));
     for (int i = 0; i < AsizeX; i++){
         result[i] = (double*) malloc (BsizeY * sizeof(double));
-        for (int j = 0; j < BsizeY; j++){
-            
+        for (int j = 0; j < BsizeY; j++){            
             result[i][j] = 0;
             // actual multiplication
-            for (int n = 0; n < AsizeX; n++){
+            for (int n = 0; n < AsizeY; n++){
                 result[i][j] += (A[i][n] * B[n][j]);
             }
 
