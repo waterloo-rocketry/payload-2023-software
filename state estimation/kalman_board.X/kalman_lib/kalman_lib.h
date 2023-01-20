@@ -18,6 +18,11 @@
 #ifndef _EXAMPLE_FILE_NAME_H    /* Guard against multiple inclusion */
 #define _EXAMPLE_FILE_NAME_H
 
+#ifndef KALMAN_LIB
+#define KALMAN_LIB
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 /* ************************************************************************** */
 /* ************************************************************************** */
@@ -30,6 +35,12 @@
 
 /* TODO:  Include other files here if needed. */
 
+
+// Returns a matrix pointer with added values
+double** matrix_addition(double** A, double ** B, int sizeX, int sizeY);
+double** scalar_multiplication(double** A, double B, int sizeX, int sizeY);
+double* vector_multiplication(double** A, double* B, int sizeX, int sizeY, int sizeV);
+double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY);
 
 /* Provide C++ Compatibility */
 #ifdef __cplusplus
@@ -174,6 +185,7 @@ extern "C" {
 
 #endif /* _EXAMPLE_FILE_NAME_H */
 
+#endif
 /* *****************************************************************************
  End of File
  */

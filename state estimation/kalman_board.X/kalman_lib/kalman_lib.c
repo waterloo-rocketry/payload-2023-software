@@ -1,3 +1,5 @@
+#include "kalman_lib.h"
+
 /* ************************************************************************** */
 /** Descriptive File Name
 
@@ -141,6 +143,61 @@ static int ExampleLocalFunction(int param1, int param2) {
  */
 int ExampleInterfaceFunction(int param1, int param2) {
     return 0;
+}
+
+double** matrix_addition(double** A, double ** B, int sizeX, int sizeY){
+    double ** result = (double **) malloc (sizeX * sizeof(double*));
+    for (int i = 0; i < sizeX; i++){
+        result[i] = (double*) malloc (sizeY * sizeof(double));
+        for (int j = 0; j < sizeY; j++){
+            result[i][j] = A[i][j] + B[i][j];
+        }
+    }
+    return result;
+}
+double** scalar_multiplication(double** A, double B, int sizeX, int sizeY){
+    double ** result = (double **) malloc (sizeX * sizeof(double*));
+    for (int i = 0; i < sizeX; i++){
+        result[i] = (double*) malloc (sizeY * sizeof(double));
+        for (int j = 0; j < sizeY; j++){
+            result[i][j] = A[i][j] * B;
+        }
+    }
+    return result;
+}
+
+double* vector_multiplication(double** A, double* B, int sizeX, int sizeY, int sizeV){
+    if (sizeV != sizeY){
+        return NULL;
+    }
+    double * result = (double *) malloc (sizeV * sizeof(double*));
+    for (int i = 0; i < sizeV; i++){
+        result[i] = 0;
+        for (int j = 0; j < sizeX; j++){
+            result[i] += A[i][j] * B[j];
+        }
+    }
+    return result;
+}
+
+double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY){
+    if (AsizeY != BsizeX){
+        return NULL;
+    }
+    double ** result = (double **) malloc (AsizeX * sizeof(double*));
+    for (int i = 0; i < AsizeX; i++){
+        result[i] = (double*) malloc (BsizeY * sizeof(double));
+        for (int j = 0; j < BsizeY; j++){
+            
+            result[i][j] = 0;
+            // actual multiplication
+            for (int n = 0; n < AsizeX; n++){
+                result[i][j] += (A[i][n] * B[n][j]);
+            }
+
+        }
+    }
+    return result;
 }
 
 
