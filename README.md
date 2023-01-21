@@ -1,16 +1,10 @@
 WELCOME TO PAYLOAD: "NOT QUITE DEPLOYABLE"
 
-Here are all the Payload Project Proposals starting Fall 2023!
-https://drive.google.com/drive/folders/1mYM4XVWNkcDOj4MidgKZG7yYtJaxXxV3?usp=sharing
+[Payload 2022/2023 Drive](https://drive.google.com/drive/folders/1Cd6_AShmbkWPmAZkzhvAZI7hbHMKju_5?usp=share_link) is the folder in the google drive where most of our research happens (if you don't have access, and need it, ask!)
 
-
-Here is the folder in the google drive where most of our research happens (if you don't have access, and need it, ask!)
-https://drive.google.com/drive/folders/1mYM4XVWNkcDOj4MidgKZG7yYtJaxXxV3?usp=sharing
-or potentially:
-https://drive.google.com/drive/folders/1Cd6_AShmbkWPmAZkzhvAZI7hbHMKju_5?usp=sharing
-
+Main projects this term are
+- State Estimation/Kalman filter
+- GrandPapa Board Firmware
+- 2024 Firmware prototyping (sson to be migrated to 2024 repo!)
 
 If you can't find the project you're looking for, make sure to check the branches
-
-CONFLUENCE
-https://uwaterloo.atlassian.net/wiki/spaces/ROCKETRY/pages/42574873580/Payload
