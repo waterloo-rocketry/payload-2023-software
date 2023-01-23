@@ -49,7 +49,7 @@ void main(void) {
     //Timing stuff
     timer0_init();
     uint32_t last_millis = millis();
-    uint32_t max_time_diff = 1000;
+    uint32_t max_time_diff = 250;
 
     
     // main event loop
