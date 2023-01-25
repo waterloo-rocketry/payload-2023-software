@@ -1,0 +1,3 @@
+[submodule "grandpapa_board.X/canlib"]
+	path = grandpapa_board.X/canlib
+	url = https://github.com/waterloo-rocketry/canlib
