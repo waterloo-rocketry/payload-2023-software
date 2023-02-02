@@ -3,12 +3,19 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+//Canlib Stuff
+#include "canlib/can.h"
+#include "canlib/can_common.h"
+#include "canlib/pic18f26k83/pic18f26k83_can.h"
+#include "canlib/message_types.h"
+#include "canlib/util/timing_util.h"
+#include "canlib/util/can_tx_buffer.h"
 #include "canlib/pic18f26k83/pic18f26k83_timer.h"
-#include "interrupt_manager.h"
 
 // MPLAB Stuff
 #include <xc.h> //should be after any pragma statements
-
+#include "interrupt_manager.h"
+#define _XTAL_FREQ  12000000 //Base clock freq is 12 MHz
 
 #define MAX_LOOP_TIME_DIFF_ms 250
 #define LED_1_OFF() (LATC5 = 0)
@@ -17,6 +24,12 @@
 #define LED_1_ON() (LATC5 = 1)
 #define LED_2_ON() (LATC6 = 1)
 #define LED_3_ON() (LATC7 = 1)
+
+static void can_msg_handler(can_msg_t *msg); //called during ISR when either of the CAN interrupt sources triggers
+static void send_status_ok(void); //send a "nominal" message, whatever that means for us
+
+// Statically allocate memory pool for CAN transmit buffer
+uint8_t tx_pool[100];
 
 void OSCILLATOR_Initialize() // this is copied from MCC but the registers have been verified
 {
@@ -28,20 +41,19 @@ void OSCILLATOR_Initialize() // this is copied from MCC but the registers have b
 
     //if the currently active clock (CON2) isn't the selected clock (CON1)
     if (OSCCON2 != 0x70) {
-        //Unhandled error (the oscillator isn't there). Fail fast, with an infinite loop.
+    //Unhandled error (the oscillator isn't there). Fail fast, with an infinite loop.
         while (1) {}
     }
 }
 
 void main(void) {
-    //Initialize Oscillator
+    //Initialize Oscillator (External 12MHz crystal; See config registers for add'l settings)
     OSCILLATOR_Initialize();
     
     //Enable global interrupts
-    //INTCON0bits.GIE = 1;
     INTERRUPT_GlobalInterruptEnable();
     
-    //Initialize Registers to support our pinout
+    //Set LED pins as output pins
     TRISC5 = 0;
     TRISC6 = 0;
     TRISC7 = 0;
@@ -49,28 +61,47 @@ void main(void) {
     //Timing stuff
     timer0_init();
     uint32_t last_millis = millis();
-    uint32_t max_time_diff = 250;
-
+    
+    //Config for internal CAN controller
+    //Set pin RB3 as CAN Rx
+    TRISB3 = 1;
+    ANSELB3 = 0;
+    CANRXPPS = 0b001011;
+    
+    //Set pin RB4 as CAN Tx 0
+    TRISB4 = 0;
+    RB4PPS = 0b110011;
+    
+    //Canlib initializations
+    can_timing_t can_params;
+    can_generate_timing_params(_XTAL_FREQ, &can_params); //Store all the custom timing parameters in a fancy struct
+    
+    can_init(&can_params, can_msg_handler); //Point canlib to our timing parameters and custom message handler
+    
+    txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy); //Point canlib to the chunk of memory we just allocated for a transmit buffer
+                                                                //can_send and can_send_ready are MCU-specific functions
+    
     
     // main event loop
     while (1) {
-        //LATC7 = ~LATC7;
-        //LATC7 = 1;
-        //LATC6 = ~LATC6;
-        //LATC5 = ~LATC5;
-        if(millis()- last_millis > max_time_diff){
+        if(millis()- last_millis > MAX_LOOP_TIME_DIFF_ms){
             LATC5 = ~LATC5;
             LATC6 = ~LATC6;
             LATC7 = ~LATC7;
+            send_status_ok();
             last_millis = millis();
         }
+        
+        txb_heartbeat();
     }
-    
     return;
 }
 
-//static void interrupt interrupt_handler() {
 static void __interrupt() interrupt_handler(void) {
+    if (PIR5) {
+        can_handle_interrupt();
+    }
+    
     // Timer0 has overflowed - update millis() function
     // This happens approximately every 500us
     if (PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1) {
@@ -78,3 +109,18 @@ static void __interrupt() interrupt_handler(void) {
         PIR3bits.TMR0IF = 0;
     }
 }
+
+static void can_msg_handler(can_msg_t *msg) {
+    //this function is passed to canlib when we initialize it
+    //When we call the generic canlib function "can_handle_interrupt", it calls this function which defines our board-specific behaviours
+}
+
+// Send a CAN message with nominal status
+static void send_status_ok(void) {
+    can_msg_t board_stat_msg;
+    build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);
+
+    // send it off
+    txb_enqueue(&board_stat_msg);
+}
+
