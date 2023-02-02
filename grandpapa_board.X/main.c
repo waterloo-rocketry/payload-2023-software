@@ -85,9 +85,9 @@ void main(void) {
     // main event loop
     while (1) {
         if(millis()- last_millis > MAX_LOOP_TIME_DIFF_ms){
-            LATC5 = ~LATC5;
-            LATC6 = ~LATC6;
-            LATC7 = ~LATC7;
+            //LATC5 = ~LATC5;
+            //LATC6 = ~LATC6;
+            //LATC7 = ~LATC7;
             send_status_ok();
             last_millis = millis();
         }
@@ -113,6 +113,19 @@ static void __interrupt() interrupt_handler(void) {
 static void can_msg_handler(can_msg_t *msg) {
     //this function is passed to canlib when we initialize it
     //When we call the generic canlib function "can_handle_interrupt", it calls this function which defines our board-specific behaviours
+    uint16_t msg_type = get_message_type(msg);
+    switch(msg_type){
+        case MSG_LEDS_ON:
+            LED_1_ON();
+            LED_2_ON();
+            LED_3_ON();
+            break;
+        case MSG_LEDS_OFF:
+            LED_1_OFF();
+            LED_2_OFF();
+            LED_3_OFF();
+            break;  
+    }  
 }
 
 // Send a CAN message with nominal status
