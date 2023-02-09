@@ -24,8 +24,9 @@
 #define LED_1_ON() (LATC5 = 1)
 #define LED_2_ON() (LATC6 = 1)
 #define LED_3_ON() (LATC7 = 1)
+#define BOARD_ID = 0x13
 
-static void can_msg_handler(can_msg_t *msg); //called during ISR when either of the CAN interrupt sources triggers
+static void can_msg_handler(const can_msg_t *msg); //called during ISR when either of the CAN interrupt sources triggers
 static void send_status_ok(void); //send a "nominal" message, whatever that means for us
 
 // Statically allocate memory pool for CAN transmit buffer
@@ -58,6 +59,10 @@ void main(void) {
     TRISC6 = 0;
     TRISC7 = 0;
     
+     LED_1_OFF();
+     LED_2_OFF();
+     LED_3_OFF();
+    
     //Timing stuff
     timer0_init();
     uint32_t last_millis = millis();
@@ -88,7 +93,7 @@ void main(void) {
             //LATC5 = ~LATC5;
             //LATC6 = ~LATC6;
             //LATC7 = ~LATC7;
-            send_status_ok();
+            //send_status_ok();
             last_millis = millis();
         }
         
@@ -110,7 +115,7 @@ static void __interrupt() interrupt_handler(void) {
     }
 }
 
-static void can_msg_handler(can_msg_t *msg) {
+static void can_msg_handler(const can_msg_t *msg) {
     //this function is passed to canlib when we initialize it
     //When we call the generic canlib function "can_handle_interrupt", it calls this function which defines our board-specific behaviours
     uint16_t msg_type = get_message_type(msg);
