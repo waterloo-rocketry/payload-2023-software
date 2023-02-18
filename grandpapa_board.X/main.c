@@ -11,6 +11,8 @@
 #include "canlib/util/timing_util.h"
 #include "canlib/util/can_tx_buffer.h"
 #include "canlib/pic18f26k83/pic18f26k83_timer.h"
+#include "canlib/mcp2515/mcp_2515.h"
+#include "spi_shit.h"
 
 // MPLAB Stuff
 #include <xc.h> //should be after any pragma statements
@@ -26,8 +28,14 @@
 #define LED_3_ON() (LATC7 = 1)
 #define BOARD_ID = 0x13
 
-static void can_msg_handler(const can_msg_t *msg); //called during ISR when either of the CAN interrupt sources triggers
+static void can_msg_handler(const can_msg_t *msg); //called during ISR when the PIC CAN module triggers
+static void mcp_msg_handler(can_msg_t *msg); //manually called when 
 static void send_status_ok(void); //send a "nominal" message, whatever that means for us
+static void send_status_ok_mcp(void);
+
+static uint8_t read_spi_byte(void);
+static void write_spi_byte(uint8_t data);
+static void drive_mcp_cs(uint8_t state);
 
 // Statically allocate memory pool for CAN transmit buffer
 uint8_t tx_pool[100];
@@ -53,39 +61,42 @@ void main(void) {
     
     //Enable global interrupts
     INTERRUPT_GlobalInterruptEnable();
+    spi_init();
+    
+    //Config for internal CAN controller
+    //Set pin RB3 as CAN Rx
+     TRISB3 = 1;
+     ANSELB3 = 0;
+     CANRXPPS = 0b001011;
+    
+    //Set pin RB4 as CAN Tx 0
+     TRISB4 = 0;
+     RB4PPS = 0b110011;
+    
+    //Canlib initializations for PIC18 CAN module and MCP2515
+     can_timing_t can_params;
+     can_generate_timing_params(_XTAL_FREQ, &can_params); //Store all the custom timing parameters in a fancy struct
+    
+     can_init(&can_params, can_msg_handler); //Point canlib to our timing parameters and custom message handler
+    
+     txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy); //Point canlib to the chunk of memory we just allocated for a transmit buffer
+                                                                 //can_send and can_send_ready are MCU-specific functions
+    
+    //MCP2515
+     mcp_can_init(&can_params, read_spi_byte, write_spi_byte, drive_mcp_cs);
+    
+    //Timing stuff
+    timer0_init();
+    uint32_t last_millis = millis();
     
     //Set LED pins as output pins
     TRISC5 = 0;
     TRISC6 = 0;
     TRISC7 = 0;
     
-     LED_1_OFF();
-     LED_2_OFF();
-     LED_3_OFF();
-    
-    //Timing stuff
-    timer0_init();
-    uint32_t last_millis = millis();
-    
-    //Config for internal CAN controller
-    //Set pin RB3 as CAN Rx
-    TRISB3 = 1;
-    ANSELB3 = 0;
-    CANRXPPS = 0b001011;
-    
-    //Set pin RB4 as CAN Tx 0
-    TRISB4 = 0;
-    RB4PPS = 0b110011;
-    
-    //Canlib initializations
-    can_timing_t can_params;
-    can_generate_timing_params(_XTAL_FREQ, &can_params); //Store all the custom timing parameters in a fancy struct
-    
-    can_init(&can_params, can_msg_handler); //Point canlib to our timing parameters and custom message handler
-    
-    txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy); //Point canlib to the chunk of memory we just allocated for a transmit buffer
-                                                                //can_send and can_send_ready are MCU-specific functions
-    
+    LED_1_OFF();
+    LED_2_OFF();
+    LED_3_OFF();
     
     // main event loop
     while (1) {
@@ -93,11 +104,11 @@ void main(void) {
             //LATC5 = ~LATC5;
             //LATC6 = ~LATC6;
             //LATC7 = ~LATC7;
-            //send_status_ok();
+            send_status_ok_mcp();
             last_millis = millis();
         }
-        
-        txb_heartbeat();
+       
+        //txb_heartbeat();
     }
     return;
 }
@@ -106,6 +117,7 @@ static void __interrupt() interrupt_handler(void) {
     if (PIR5) {
         can_handle_interrupt();
     }
+   
     
     // Timer0 has overflowed - update millis() function
     // This happens approximately every 500us
@@ -140,5 +152,30 @@ static void send_status_ok(void) {
 
     // send it off
     txb_enqueue(&board_stat_msg);
+}
+
+static void send_status_ok_mcp(void) {
+    can_msg_t board_stat_msg;
+    build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);
+
+    // send it off
+    mcp_can_send(&board_stat_msg);
+}
+
+static void drive_mcp_cs(uint8_t state){
+    if(state) LATC1 = 1;
+    else LATC1 = 0;
+}
+
+static uint8_t read_spi_byte(void){
+    uint8_t temp = SPI1RXB;
+    SPI1TXB = 0x00; //write dummy byte to transmit
+    while(!SPI1TXBE);
+    return SPI1RXB;
+}
+
+static void write_spi_byte(uint8_t data){
+    SPI1TXB = data;
+    while(!SPI1TXBE);
 }
 

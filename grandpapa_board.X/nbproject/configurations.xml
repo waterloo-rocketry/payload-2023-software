@@ -21,6 +21,8 @@
       <itemPath>canlib/message_types.h</itemPath>
       <itemPath>canlib/pic18f26k83/pic18f26k83_can.h</itemPath>
       <itemPath>canlib/pic18f26k83/pic18f26k83_timer.h</itemPath>
+      <itemPath>canlib/mcp2515/mcp_2515.c</itemPath>
+      <itemPath>canlib/mcp2515/mcp_2515.h</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -35,8 +37,10 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>main.c</itemPath>
-      <itemPath>canlib/config_registers.c</itemPath>
       <itemPath>health_checks.h</itemPath>
+      <itemPath>spi_shit.c</itemPath>
+      <itemPath>spi_shit.h</itemPath>
+      <itemPath>config_registers.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
