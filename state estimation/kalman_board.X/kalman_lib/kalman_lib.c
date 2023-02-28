@@ -1,228 +1,96 @@
 #include "kalman_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
-/* ************************************************************************** */
-/** Descriptive File Name
+struct Matrix matrix_addition(struct Matrix A, struct Matrix B){
+    assert(A.rows == B.rows);
+    assert(A.columns == B.columns);
 
-  @Company
-    Company Name
+    double ** result_data = (double **) malloc (A.rows * sizeof(double*));
 
-  @File Name
-    filename.c
-
-  @Summary
-    Brief description of the file.
-
-  @Description
-    Describe the purpose of this file.
- */
-/* ************************************************************************** */
-
-/* ************************************************************************** */
-/* ************************************************************************** */
-/* Section: Included Files                                                    */
-/* ************************************************************************** */
-/* ************************************************************************** */
-
-/* This section lists the other files that are included in this file.
- */
-
-/* TODO:  Include other files here if needed. */
-
-
-/* ************************************************************************** */
-/* ************************************************************************** */
-/* Section: File Scope or Global Data                                         */
-/* ************************************************************************** */
-/* ************************************************************************** */
-
-/*  A brief description of a section can be given directly below the section
-    banner.
- */
-
-/* ************************************************************************** */
-/** Descriptive Data Item Name
-
-  @Summary
-    Brief one-line summary of the data item.
-    
-  @Description
-    Full description, explaining the purpose and usage of data item.
-    <p>
-    Additional description in consecutive paragraphs separated by HTML 
-    paragraph breaks, as necessary.
-    <p>
-    Type "JavaDoc" in the "How Do I?" IDE toolbar for more information on tags.
-    
-  @Remarks
-    Any additional remarks
- */
-int global_data;
-
-
-/* ************************************************************************** */
-/* ************************************************************************** */
-// Section: Local Functions                                                   */
-/* ************************************************************************** */
-/* ************************************************************************** */
-
-/*  A brief description of a section can be given directly below the section
-    banner.
- */
-
-/* ************************************************************************** */
-
-/** 
-  @Function
-    int ExampleLocalFunctionName ( int param1, int param2 ) 
-
-  @Summary
-    Brief one-line description of the function.
-
-  @Description
-    Full description, explaining the purpose and usage of the function.
-    <p>
-    Additional description in consecutive paragraphs separated by HTML 
-    paragraph breaks, as necessary.
-    <p>
-    Type "JavaDoc" in the "How Do I?" IDE toolbar for more information on tags.
-
-  @Precondition
-    List and describe any required preconditions. If there are no preconditions,
-    enter "None."
-
-  @Parameters
-    @param param1 Describe the first parameter to the function.
-    
-    @param param2 Describe the second parameter to the function.
-
-  @Returns
-    List (if feasible) and describe the return values of the function.
-    <ul>
-      <li>1   Indicates an error occurred
-      <li>0   Indicates an error did not occur
-    </ul>
-
-  @Remarks
-    Describe any special behavior not described above.
-    <p>
-    Any additional remarks.
-
-  @Example
-    @code
-    if(ExampleFunctionName(1, 2) == 0)
-    {
-        return 3;
-    }
- */
-static int ExampleLocalFunction(int param1, int param2) {
-    return 0;
-}
-
-
-/* ************************************************************************** */
-/* ************************************************************************** */
-// Section: Interface Functions                                               */
-/* ************************************************************************** */
-/* ************************************************************************** */
-
-/*  A brief description of a section can be given directly below the section
-    banner.
- */
-
-// *****************************************************************************
-
-/** 
-  @Function
-    int ExampleInterfaceFunctionName ( int param1, int param2 ) 
-
-  @Summary
-    Brief one-line description of the function.
-
-  @Remarks
-    Refer to the example_file.h interface header for function usage details.
- */
-int ExampleInterfaceFunction(int param1, int param2) {
-    return 0;
-}
-
-double** matrix_addition(double** A, double ** B, int sizeX, int sizeY){
-    double ** result = (double **) malloc (sizeX * sizeof(double*));
-    for (int i = 0; i < sizeX; i++){
-        result[i] = (double*) malloc (sizeY * sizeof(double));
+    for (int i = 0; i < A.rows; i++){
+        result_data[i] = (double*) malloc (A.columns * sizeof(double));
         for (int j = 0; j < sizeY; j++){
-            result[i][j] = A[i][j] + B[i][j];
+            result_data[i][j] = A.data[i][j] + B.data[i][j];
         }
     }
-    return result;
-}
-double** scalar_multiplication(double** A, double B, int sizeX, int sizeY){
-    double ** result = (double **) malloc (sizeX * sizeof(double*));
-    for (int i = 0; i < sizeX; i++){
-        result[i] = (double*) malloc (sizeY * sizeof(double));
-        for (int j = 0; j < sizeY; j++){
-            result[i][j] = A[i][j] * B;
-        }
-    }
+    
+    struct Matrix result = {result_data, A.rows, A.columns};
+
     return result;
 }
 
-double* vector_multiplication(double** A, double* B, int sizeX, int sizeY, int sizeV){
-    if (sizeV != sizeY){
-        return NULL;
-    }
-    double * result = (double *) malloc (sizeV * sizeof(double*));
-    for (int i = 0; i < sizeV; i++){
-        result[i] = 0;
-        for (int j = 0; j < sizeX; j++){
-            result[i] += A[i][j] * B[j];
+
+struct Matrix scalar_multiplication(struct Matrix A, double s){
+    double ** result_data = (double **) malloc (A.rows * sizeof(double*));
+    for (int i = 0; i < A.rows; i++){
+        result_data[i] = (double*) malloc (A.columns * sizeof(double));
+        for (int j = 0; j < A.columns; j++){
+            result_data[i][j] = A.data[i][j] * s;
         }
     }
+
+    struct Matrix result = {result_data, A.rows, A.columns};
+
     return result;
 }
 
-double** matrix_multiplication(double** A, double** B, int AsizeX, int AsizeY, int BsizeX, int BsizeY, int* sizeReturn){
-    if (AsizeY != BsizeX){
-        return NULL;
+struct Vector vector_multiplication(struct Matrix A, struct Vector B){
+    assert(B.size == A.columns)
+
+    double * result_data = (double *) malloc (A.rows * sizeof(double));
+    for (int i = 0; i < A.rows; i++){
+        result_data[i] = 0;
+        for (int j = 0; j < A.columns; j++){
+            result_data[i] += A.data[i][j] * B[j];
+        }
     }
-    else {
-        sizeReturn[0] = AsizeX;
-        sizeReturn[1] = BsizeY;
-    }
-    double ** result = (double **) malloc (AsizeX * sizeof(double*));
-    for (int i = 0; i < AsizeX; i++){
-        result[i] = (double*) malloc (BsizeY * sizeof(double));
-        for (int j = 0; j < BsizeY; j++){            
+
+    struct Matrix result = {result_data, A.rows};
+
+    return result;
+}
+
+struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B){
+    assert(A.columns == B.rows);
+
+    double** result_data = (double **) malloc (A.rows * sizeof(double*));
+    for (int i = 0; i < A.rows; i++){
+        result_data[i] = (double*) malloc (B.columns * sizeof(double));
+        for (int j = 0; j < B.columns; j++){            
             result[i][j] = 0;
-            // actual multiplication
+            // result[i][j] = (ith row of A) * (jth column of B)
             for (int n = 0; n < AsizeY; n++){
-                result[i][j] += (A[i][n] * B[n][j]);
+                result_data[i][j] += (A.data[i][n] * B.data[n][j]);
             }
 
         }
     }
+    
+    struct Matrix result = {result_data, A.rows, B.columns};
+
     return result;
 }
 
-double** matrix_transposition(double** A, int AsizeX, int AsizeY, int* sizeReturn){
-    sizeReturn[0] = AsizeY;
-    sizeReturn[1] = AsizeX;
-    double ** result = (double **) malloc (AsizeY * sizeof(double*));
-    for (int i = 0; i < AsizeY; i++){
-        result[i] = (double*) malloc (AsizeX * sizeof(double));
-        for (int j = 0; j < AsizeX; j++){            
-            result[i][j] = A[j][i];
+struct Matrix matrix_transposition(struct Matrix A){
+    double ** result_data = (double **) malloc (A.columns * sizeof(double*));
+    for (int i = 0; i < A.columns; i++){
+        result[i] = (double*) malloc (A.rows * sizeof(double));
+        for (int j = 0; j < A.rows; j++){            
+            result_data[i][j] = A.data[j][i];
         }
     }
+
+    struct Matrix result = {result_data, A.columns, B.rows};
+
     return result;
 }
 
 // Function to print a matrix
-void printMatrix(double** matrix, int n) {
-    int i, j;
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
+void printMatrix(struct Matrix A) {
+    for (int i = 0; i < A.rows; i++) {
+        for (int j = 0; j < A.columns; j++) {
             printf("%f ", matrix[i][j]);
         }
         printf("\n");
@@ -230,18 +98,23 @@ void printMatrix(double** matrix, int n) {
 }
 
 // Function to perform row operations on a matrix
-void rowOperation(double** matrix, int n, int i, int j, double x) {
-    int k;
-    for (k = 0; k < n; k++) {
-        matrix[i][k] -= x * matrix[j][k];
+void rowOperation(struct Matrix A, int recvRow, int sendRow, double scalar) {
+    assert(recvRow < A.rows);
+    assert(sendRow < A.rows);
+
+    for (int k = 0; k < A.columns; k++) {
+        A.data[recvRow][k] -= scalar * A.data[sendRow][k];
     }
 }
 
 // Function to calculate the inverse of a matrix using Gauss-Jordan method
-double** matrixInverse(double** matrix, int n) {
+struct Matrix matrixInverse(struct Matrix matrix) {
+    assert(matrix.rows == matrix.columns);
+    int n = matrix.rows;
+
     double** inverse = (double**)malloc(n * sizeof(double*));
-    int i, j, k;
-    for (i = 0; i < n; i++) {
+
+    for (int i = 0; i < n; i++) {
         inverse[i] = (double*)malloc(n * sizeof(double));
         for (j = 0; j < n; j++) {
             if (i == j) {
@@ -251,59 +124,74 @@ double** matrixInverse(double** matrix, int n) {
             }
         }
     }
-    for (i = 0; i < n; i++) {
-        if (matrix[i][i] == 0) {
+
+    for (int i = 0; i < n; i++) {
+        if (matrix.data[i][i] == 0) {
             // Find a row with non-zero entry in the ith column and swap it with the current row
             int row_to_swap = i + 1;
-            while (row_to_swap < n && matrix[row_to_swap][i] == 0) {
+            while (row_to_swap < n && matrix.data[row_to_swap][i] == 0) {
                 row_to_swap++;
             }
             if (row_to_swap == n) {
                 // If no such row exists, the matrix is singular and has no inverse
                 printf("Matrix is singular and has no inverse.\n");
-                exit(1);
+                assert(1 == 0);
             }
             // Swap the current row with the row with non-zero entry in the ith column
             for (int j = 0; j < n; j++){
-                printf("%f ", matrix[i][j]);
+                printf("%f ", matrix.data[i][j]);
             }
-            double* temp = matrix[i];
-            matrix[i] = matrix[row_to_swap];
-            matrix[row_to_swap] = temp;
+            double* temp = matrix.data[i];
+            matrix.data[i] = matrix.data[row_to_swap];
+            matrix.data[row_to_swap] = temp;
             temp = inverse[i];
             inverse[i] = inverse[row_to_swap];
             inverse[row_to_swap] = temp;
         }
-        double x = matrix[i][i];
-        for (j = 0; j < n; j++) {
-            matrix[i][j] /= x;
+        double x = matrix.data[i][i];
+        for (int j = 0; j < n; j++) {
+            matrix.data[i][j] /= x;
             inverse[i][j] /= x;
         }
-        for (j = 0; j < n; j++) {
+        for (int j = 0; j < n; j++) {
             if (i != j) {
-                x = matrix[j][i];
-                rowOperation(matrix, n, j, i, x);
+                x = matrix.data[j][i];
+                rowOperation(matrix.data, n, j, i, x);
                 rowOperation(inverse, n, j, i, x);
             }
         }
     }
-    return inverse;
+    struct Matrix result = {inverse, n, n};
+    return result;
 }
 
+void freeMatrix(struct Matrix A) {
+    for (int i = 0; i < A.rows; ++i) {
+        free(A.data[i]);
+    }
 
-
-struct KalmanEntity{
-    int dim;
-    double* state;
-    double** covariance;
+    free(A.data);
 }
 
-void KalmanIterate(struct KalmanEntity* k, double* control, double* sensor, double** model){
-    double* predicted_state = vector_multiplication(model, k->state, k->dim, k->dim, )
-
-
+void freeVector(struct Vector v) {
+    free(v.data);
 }
 
+// Kalman Stuff
+
+void KalmanIterate(struct KalmanEntity k, ){
+    // Predict State
+    struct Vector x_p = vector_multiplication(F, k.state);
+
+    struct Matrix m1 = matrix_multiplication(F, k.covariance);
+    struct Matrix m2 = matrix_transposition(F);
+    struct Matrix P_p = matrix_multiplication(m1, m2);
+
+    freeMatrix(m1);
+    freeMatrix(m2);
+}
+
+/*
     def __init__(self, dim_x, dim_z, dim_u):
         self.x = np.zeros((dim_x, 1))
         self.F = np.zeros((dim_x, dim_x))
@@ -350,7 +238,7 @@ void KalmanIterate(struct KalmanEntity* k, double* control, double* sensor, doub
         self.P = P_A
 
         return self.x
-
+*/
 /* *****************************************************************************
  End of File
  */
