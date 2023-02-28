@@ -21,6 +21,20 @@ struct Matrix matrix_addition(struct Matrix A, struct Matrix B){
     return result;
 }
 
+struct Vector vector_addition(struct Vector A, struct Vector B){
+    assert(A.size == B.size);
+
+    double * result_data = (double *) malloc (A.size * sizeof(double));
+
+    for (int i = 0; i < A.size; i++){
+        result_data[i] = A.data[i] + B.data[i];
+    }
+    
+    struct Vector result = {result_data, A.size};
+
+    return result;
+}
+
 
 struct Matrix scalar_multiplication(struct Matrix A, double s){
     double ** result_data = (double **) malloc (A.rows * sizeof(double*));
@@ -98,7 +112,7 @@ void printMatrix(struct Matrix A) {
 }
 
 // Function to perform row operations on a matrix
-void rowOperation(struct Matrix A, int recvRow, int sendRow, double scalar) {
+void row_operation(struct Matrix A, int recvRow, int sendRow, double scalar) {
     assert(recvRow < A.rows);
     assert(sendRow < A.rows);
 
@@ -108,7 +122,7 @@ void rowOperation(struct Matrix A, int recvRow, int sendRow, double scalar) {
 }
 
 // Function to calculate the inverse of a matrix using Gauss-Jordan method
-struct Matrix matrixInverse(struct Matrix matrix) {
+struct Matrix matrix_inverse(struct Matrix matrix) {
     assert(matrix.rows == matrix.columns);
     int n = matrix.rows;
 
@@ -156,8 +170,8 @@ struct Matrix matrixInverse(struct Matrix matrix) {
         for (int j = 0; j < n; j++) {
             if (i != j) {
                 x = matrix.data[j][i];
-                rowOperation(matrix.data, n, j, i, x);
-                rowOperation(inverse, n, j, i, x);
+                row_operation(matrix.data, n, j, i, x);
+                row_operation(inverse, n, j, i, x);
             }
         }
     }
@@ -179,16 +193,69 @@ void freeVector(struct Vector v) {
 
 // Kalman Stuff
 
-void KalmanIterate(struct KalmanEntity k, ){
+void KalmanIterate(struct KalmanEntity k){
     // Predict State
-    struct Vector x_p = vector_multiplication(F, k.state);
+    struct Vector x_p_no_control = vector_multiplication(F, k.state);
+    struct Vector control = vector_multiplication(G, u);
+    struct Vector x_p = vector_addition(x_p_no_control, control);
 
-    struct Matrix m1 = matrix_multiplication(F, k.covariance);
-    struct Matrix m2 = matrix_transposition(F);
-    struct Matrix P_p = matrix_multiplication(m1, m2);
+    freeVector(x_p_no_control);
+    freeVector(control);
 
-    freeMatrix(m1);
-    freeMatrix(m2);
+    struct Matrix FP = matrix_multiplication(F, k.covariance);
+    struct Matrix Ft = matrix_transposition(F);
+    struct Matrix P_p_no_noise = matrix_multiplication(FP, Ft);
+    struct Matrix P_p = matrix_addition(P_p_no_noise, Q);
+
+    freeMatrix(FP);
+    freeMatrix(Ft);
+    freeMatrix(P_p_no_noise);
+
+    // Now we have the predicted
+    // states x_p and P_p
+
+    // Compute the Kalman Gain
+
+    struct Matrix HP_p = matrix_multiplication(H, P_p);
+    struct Matrix Ht = matrix_transposition(H);
+    struct Matrix denom_no_noise = matrix_multiplication(HP_p, Ht);
+    struct Matrix denom = matrix_addition(denom_no_noise, R);
+    struct Matrix denom_inv = matrix_inverse(denom);
+    struct Matrix Ht_denom_inv = matrix_multiplication(Ht, denom_inv);
+    struct Matrix KalmanGain = matrix_multiplication(P_p, Ht_denom_inv);
+
+    freeMatrix(HP_p);
+    freeMatrix(Ht);
+    freeMatrix(denom_no_noise);
+    freeMatrix(denom);
+    freeMatrix(denom_inv);
+    freeMatrix(Ht_denom_inv);
+
+    // Now we have the Kalman Gain
+
+    // Compute the update predictions
+    struct Matrix minus_H = scalar_multiplication(H, -1);
+
+    struct Vector minus_Hxp = vector_multiplication(minus_H, x_p);
+    struct Vector z_minus_Hxp = vector_addition(z, minus_Hxp);
+    struct Vector change_factor_x = vector_multiplication(KalmanGain, z_minus_Hxp);
+    struct Vector x_updated = vector_addition(x_p, change_factor_x);
+
+    freeVector(Hxp);
+    freeVector(minus_Hxp);
+    freeVector(z_minus_Hxp);
+    freeVector(change_factor_x);
+
+    struct Matrix minus_HPp = matrix_multiplication(minus_H, P_p);
+    struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp);
+    struct Matrix P_updated = matrix_addition(P_p, negative_change_factor);
+
+    freeMatrix(HPp);
+    freeMatrix(change_factor_p);
+    freeMatrix(negative_change_factor);
+
+    k.state = x_updated;
+    k.covariance = P_updated;
 }
 
 /*

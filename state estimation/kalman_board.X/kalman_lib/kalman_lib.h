@@ -45,7 +45,7 @@ struct Vector vector_multiplication(struct Matrix A, struct Vector B);
 struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B);
 struct Matrix matrix_transposition(struct Matrix A);
 void rowOperation(struct Matrix A, int recvRow, int sendRow, double scalar);
-struct Matrix matrixInverse(struct Matrix matrix);
+struct Matrix matrix_inverse(struct Matrix matrix);
 void freeMatrix(struct Matrix A);
 void freeVector(struct Vector v);
 
