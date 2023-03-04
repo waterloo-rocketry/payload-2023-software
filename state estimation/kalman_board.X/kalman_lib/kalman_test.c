@@ -2,31 +2,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+double Q_arr[2][2] = {{0, 0}, {0, 0}};
+double F_arr[2][2] = {{1, 0}, {0, 1}};
+
+void update_model(size_t delta_t) {
+    F_arr[0][1] = delta_t;
+}
+
 int main(){
-    double** A = (double**) malloc (sizeof(double*) * 3);
-    for (int i = 0; i < 3; i++){
-        A[i] = (double*) malloc (sizeof(double) * 2);
-    }
-    A[0][0] = 1; A[0][1] = 2;
-    A[1][0] = 2; A[1][1] = 1;
-    A[2][0] = 3; A[2][1] = 3;
-    
-    double** B = (double**) malloc (sizeof(double*) * 2);
-    for (int i = 0; i < 2; i++){
-        B[i] = (double*) malloc (sizeof(double) * 1);
-    }
-    B[0][0] = 3; //B[0][1] = 2;
-    B[1][0] = 2; //B[1][1] = 1;
+    struct KalmanEntity k;
+    k.state = {malloc(2 * sizeof(double)), 2};
+    k.state.data[0] = k.state.data[1] = x0.data[2] = 0
 
-    int* Csize = malloc(sizeof(int) * 2);
-    double** C = matrix_multiplication(A, B, 3, 2, 2, 1, Csize);
+    k.covariance = {malloc(2 * sizeof(double*)), 2, 2};
+    k.covariance.data[0] = malloc(2 * sizeof(double*));
+    k.covariance.data[1] = malloc(2 * sizeof(double*));
 
-    printf("%d %d\n", Csize[0], Csize[1]);
-    for (int i = 0; i < Csize[0]; i++){ 
-        for (int j = 0; j < Csize[1]; j++){
-            printf("%f ", C[i][j]);
-        }
-        printf("\n");
-    }
+    k.covariance.data[0][0] = k.covariance.data[1][1] = 1;
+    k.covariance.data[1][0] = k.covariance.data[0][1] = 0;
 
+    struct PredictionParameters predParams;
+    predParams.model = {F_arr, 2, 2};
+    predParams.model = {Q_arr, 2, 2};
 }

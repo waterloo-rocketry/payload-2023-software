@@ -15,10 +15,6 @@
  */
 /* ************************************************************************** */
 
-#ifndef _EXAMPLE_FILE_NAME_H    /* Guard against multiple inclusion */
-#define _EXAMPLE_FILE_NAME_H
-
-#ifndef KALMAN_LIB
 #ifndef KALMAN_LIB
 #define KALMAN_LIB
 #include <stdio.h>
@@ -44,10 +40,10 @@ struct Matrix scalar_multiplication(struct Matrix A, double s);
 struct Vector vector_multiplication(struct Matrix A, struct Vector B);
 struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B);
 struct Matrix matrix_transposition(struct Matrix A);
-void rowOperation(struct Matrix A, int recvRow, int sendRow, double scalar);
+void row_operation(struct Matrix A, int recvRow, int sendRow, double scalar);
 struct Matrix matrix_inverse(struct Matrix matrix);
-void freeMatrix(struct Matrix A);
-void freeVector(struct Vector v);
+void free_matrix(struct Matrix A);
+void free_vector(struct Vector v);
 
 // Kalman Library Functions
 
@@ -56,11 +52,27 @@ struct KalmanEntity {
   struct Matrix covariance;
 };
 
-struct KalmanEnvironment {
+struct PredictionParameters {
   struct Matrix model; // F
-  struct Matrix control; // G
-  struct Matrix predictionNoise; // Q
-
+  struct Matrix prediction_uncertainty; // Q
 };
+
+struct ControlParameters {
+  struct Matrix control_matrix; // G
+  struct Vector input; // u
+};
+
+struct SensorReading {
+  struct Matrix sensor_matrix; // H
+  struct Matrix sensor_uncertainty; // R
+  struct Vector sensor_reading; // z
+};
+
+void KalmanIterate(
+  struct KalmanEntity k,
+  struct PredictionParameters predParams,
+  struct ControlParameters ctrlParams,
+  struct SensorReading snsrReading
+);
 
 #endif /* _EXAMPLE_FILE_NAME_H */

@@ -11,7 +11,7 @@ struct Matrix matrix_addition(struct Matrix A, struct Matrix B){
 
     for (int i = 0; i < A.rows; i++){
         result_data[i] = (double*) malloc (A.columns * sizeof(double));
-        for (int j = 0; j < sizeY; j++){
+        for (int j = 0; j < A.columns; j++){
             result_data[i][j] = A.data[i][j] + B.data[i][j];
         }
     }
@@ -51,17 +51,17 @@ struct Matrix scalar_multiplication(struct Matrix A, double s){
 }
 
 struct Vector vector_multiplication(struct Matrix A, struct Vector B){
-    assert(B.size == A.columns)
+    assert(B.size == A.columns);
 
     double * result_data = (double *) malloc (A.rows * sizeof(double));
     for (int i = 0; i < A.rows; i++){
         result_data[i] = 0;
         for (int j = 0; j < A.columns; j++){
-            result_data[i] += A.data[i][j] * B[j];
+            result_data[i] += A.data[i][j] * B.data[j];
         }
     }
 
-    struct Matrix result = {result_data, A.rows};
+    struct Vector result = {result_data, A.rows};
 
     return result;
 }
@@ -73,9 +73,9 @@ struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B){
     for (int i = 0; i < A.rows; i++){
         result_data[i] = (double*) malloc (B.columns * sizeof(double));
         for (int j = 0; j < B.columns; j++){            
-            result[i][j] = 0;
+            result_data[i][j] = 0;
             // result[i][j] = (ith row of A) * (jth column of B)
-            for (int n = 0; n < AsizeY; n++){
+            for (int n = 0; n < A.columns; n++){
                 result_data[i][j] += (A.data[i][n] * B.data[n][j]);
             }
 
@@ -90,13 +90,13 @@ struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B){
 struct Matrix matrix_transposition(struct Matrix A){
     double ** result_data = (double **) malloc (A.columns * sizeof(double*));
     for (int i = 0; i < A.columns; i++){
-        result[i] = (double*) malloc (A.rows * sizeof(double));
+        result_data[i] = (double*) malloc (A.rows * sizeof(double));
         for (int j = 0; j < A.rows; j++){            
             result_data[i][j] = A.data[j][i];
         }
     }
 
-    struct Matrix result = {result_data, A.columns, B.rows};
+    struct Matrix result = {result_data, A.columns, A.rows};
 
     return result;
 }
@@ -105,7 +105,7 @@ struct Matrix matrix_transposition(struct Matrix A){
 void printMatrix(struct Matrix A) {
     for (int i = 0; i < A.rows; i++) {
         for (int j = 0; j < A.columns; j++) {
-            printf("%f ", matrix[i][j]);
+            printf("%f ", A.data[i][j]);
         }
         printf("\n");
     }
@@ -122,28 +122,30 @@ void row_operation(struct Matrix A, int recvRow, int sendRow, double scalar) {
 }
 
 // Function to calculate the inverse of a matrix using Gauss-Jordan method
-struct Matrix matrix_inverse(struct Matrix matrix) {
-    assert(matrix.rows == matrix.columns);
-    int n = matrix.rows;
+struct Matrix matrix_inverse(struct Matrix A) {
+    assert(A.rows == A.columns);
+    int n = A.rows;
 
-    double** inverse = (double**)malloc(n * sizeof(double*));
+    double** inverse_data = (double**)malloc(n * sizeof(double*));
 
     for (int i = 0; i < n; i++) {
-        inverse[i] = (double*)malloc(n * sizeof(double));
-        for (j = 0; j < n; j++) {
+        inverse_data[i] = (double*)malloc(n * sizeof(double));
+        for (int j = 0; j < n; j++) {
             if (i == j) {
-                inverse[i][j] = 1.0;
+                inverse_data[i][j] = 1.0;
             } else {
-                inverse[i][j] = 0.0;
+                inverse_data[i][j] = 0.0;
             }
         }
     }
 
+    struct Matrix A_inv = {inverse_data, n, n};
+
     for (int i = 0; i < n; i++) {
-        if (matrix.data[i][i] == 0) {
+        if (A.data[i][i] == 0) {
             // Find a row with non-zero entry in the ith column and swap it with the current row
             int row_to_swap = i + 1;
-            while (row_to_swap < n && matrix.data[row_to_swap][i] == 0) {
+            while (row_to_swap < n && A.data[row_to_swap][i] == 0) {
                 row_to_swap++;
             }
             if (row_to_swap == n) {
@@ -153,33 +155,33 @@ struct Matrix matrix_inverse(struct Matrix matrix) {
             }
             // Swap the current row with the row with non-zero entry in the ith column
             for (int j = 0; j < n; j++){
-                printf("%f ", matrix.data[i][j]);
+                printf("%f ", A.data[i][j]);
             }
-            double* temp = matrix.data[i];
-            matrix.data[i] = matrix.data[row_to_swap];
-            matrix.data[row_to_swap] = temp;
-            temp = inverse[i];
-            inverse[i] = inverse[row_to_swap];
-            inverse[row_to_swap] = temp;
+            double* temp = A.data[i];
+            A.data[i] = A.data[row_to_swap];
+            A.data[row_to_swap] = temp;
+            temp = A_inv.data[i];
+            A_inv.data[i] = A_inv.data[row_to_swap];
+            A_inv.data[row_to_swap] = temp;
         }
-        double x = matrix.data[i][i];
+        double x = A.data[i][i];
         for (int j = 0; j < n; j++) {
-            matrix.data[i][j] /= x;
-            inverse[i][j] /= x;
+            A.data[i][j] /= x;
+            A_inv.data[i][j] /= x;
         }
         for (int j = 0; j < n; j++) {
             if (i != j) {
-                x = matrix.data[j][i];
-                row_operation(matrix.data, n, j, i, x);
-                row_operation(inverse, n, j, i, x);
+                x = A.data[j][i];
+                row_operation(A, j, i, x);
+                row_operation(A_inv, j, i, x);
             }
         }
     }
-    struct Matrix result = {inverse, n, n};
-    return result;
+
+    return A_inv;
 }
 
-void freeMatrix(struct Matrix A) {
+void free_matrix(struct Matrix A) {
     for (int i = 0; i < A.rows; ++i) {
         free(A.data[i]);
     }
@@ -187,72 +189,78 @@ void freeMatrix(struct Matrix A) {
     free(A.data);
 }
 
-void freeVector(struct Vector v) {
+void free_vector(struct Vector v) {
     free(v.data);
 }
 
 // Kalman Stuff
 
-void KalmanIterate(struct KalmanEntity k){
-    // Predict State
-    struct Vector x_p_no_control = vector_multiplication(F, k.state);
-    struct Vector control = vector_multiplication(G, u);
+void KalmanIterate(
+    struct KalmanEntity k,
+    struct PredictionParameters predParams,
+    struct ControlParameters ctrlParams,
+    struct SensorReading snsrReading)
+{
+    // Predict State, implementing these equations
+    /*
+    x_p = Fx + Gu
+    P_p = FPF^t + Q
+    */
+    struct Vector x_p_no_control = vector_multiplication(predParams.model, k.state);
+    struct Vector control = vector_multiplication(ctrlParams.control_matrix, ctrlParams.input);
     struct Vector x_p = vector_addition(x_p_no_control, control);
 
-    freeVector(x_p_no_control);
-    freeVector(control);
+    free_vector(x_p_no_control);
+    free_vector(control);
 
-    struct Matrix FP = matrix_multiplication(F, k.covariance);
-    struct Matrix Ft = matrix_transposition(F);
+    struct Matrix FP = matrix_multiplication(predParams.model, k.covariance);
+    struct Matrix Ft = matrix_transposition(predParams.model);
     struct Matrix P_p_no_noise = matrix_multiplication(FP, Ft);
-    struct Matrix P_p = matrix_addition(P_p_no_noise, Q);
+    struct Matrix P_p = matrix_addition(P_p_no_noise, predParams.prediction_uncertainty);
 
-    freeMatrix(FP);
-    freeMatrix(Ft);
-    freeMatrix(P_p_no_noise);
-
-    // Now we have the predicted
-    // states x_p and P_p
+    free_matrix(FP);
+    free_matrix(Ft);
+    free_matrix(P_p_no_noise);
 
     // Compute the Kalman Gain
+    // KG = (P_p)H^t * (H(P_p)H^T + R)^-1
 
-    struct Matrix HP_p = matrix_multiplication(H, P_p);
-    struct Matrix Ht = matrix_transposition(H);
+    struct Matrix HP_p = matrix_multiplication(snsrReading.sensor_matrix, P_p);
+    struct Matrix Ht = matrix_transposition(snsrReading.sensor_matrix);
     struct Matrix denom_no_noise = matrix_multiplication(HP_p, Ht);
-    struct Matrix denom = matrix_addition(denom_no_noise, R);
+    struct Matrix denom = matrix_addition(denom_no_noise, snsrReading.sensor_uncertainty);
     struct Matrix denom_inv = matrix_inverse(denom);
     struct Matrix Ht_denom_inv = matrix_multiplication(Ht, denom_inv);
     struct Matrix KalmanGain = matrix_multiplication(P_p, Ht_denom_inv);
 
-    freeMatrix(HP_p);
-    freeMatrix(Ht);
-    freeMatrix(denom_no_noise);
-    freeMatrix(denom);
-    freeMatrix(denom_inv);
-    freeMatrix(Ht_denom_inv);
-
-    // Now we have the Kalman Gain
+    free_matrix(HP_p);
+    free_matrix(Ht);
+    free_matrix(denom_no_noise);
+    free_matrix(denom);
+    free_matrix(denom_inv);
+    free_matrix(Ht_denom_inv);
 
     // Compute the update predictions
-    struct Matrix minus_H = scalar_multiplication(H, -1);
+    struct Matrix minus_H = scalar_multiplication(snsrReading.sensor_matrix, -1);
 
     struct Vector minus_Hxp = vector_multiplication(minus_H, x_p);
-    struct Vector z_minus_Hxp = vector_addition(z, minus_Hxp);
+    struct Vector z_minus_Hxp = vector_addition(snsrReading.sensor_reading, minus_Hxp);
     struct Vector change_factor_x = vector_multiplication(KalmanGain, z_minus_Hxp);
     struct Vector x_updated = vector_addition(x_p, change_factor_x);
 
-    freeVector(Hxp);
-    freeVector(minus_Hxp);
-    freeVector(z_minus_Hxp);
-    freeVector(change_factor_x);
+    free_vector(minus_Hxp);
+    free_vector(z_minus_Hxp);
+    free_vector(change_factor_x);
 
     struct Matrix minus_HPp = matrix_multiplication(minus_H, P_p);
     struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp);
     struct Matrix P_updated = matrix_addition(P_p, negative_change_factor);
 
-    freeMatrix(HPp);
-    freeMatrix(change_factor_p);
-    freeMatrix(negative_change_factor);
+    free_matrix(negative_change_factor);
+
+    free_vector(x_p);
+    free_matrix(P_p);
+    free_matrix(KalmanGain);
 
     k.state = x_updated;
     k.covariance = P_updated;
