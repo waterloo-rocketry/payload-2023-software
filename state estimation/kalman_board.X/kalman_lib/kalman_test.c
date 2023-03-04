@@ -17,7 +17,7 @@ double* G_arr[2] = {g0, g1};
 double u_inp[1] = {0};
 
 double h0[2] = {1, 0};
-double h1[2] = {1, 0};
+double h1[2] = {0, 1};
 double* H_arr[2] = {h0, h1};
 
 double r0[2] = {1, 0};
@@ -35,7 +35,7 @@ void update() {
     time = new_time;
 }
 
-int main(){
+int main() {
     struct KalmanEntity k;
     k.state = (struct Vector) {malloc(2 * sizeof(double)), 2};
     k.state.data[0] = k.state.data[1] = 0;
@@ -65,6 +65,7 @@ int main(){
     snsrReading.sensor_reading = (struct Vector) {z_inp, 2};
 
     for (int i = 0; i < 1000; ++i) {
+
         printf("%f,%f,%f,%f\n", k.state.data[0], k.state.data[1], z_inp[0], z_inp[1]);
 
         update();

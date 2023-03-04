@@ -45,7 +45,7 @@ struct Matrix matrix_inverse(struct Matrix matrix);
 void free_matrix(struct Matrix A);
 void free_vector(struct Vector v);
 
-void printMatrix(struct Matrix A);
+void print_matrix(struct Matrix A);
 
 // Kalman Library Functions
 

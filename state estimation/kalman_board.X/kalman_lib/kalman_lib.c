@@ -102,13 +102,20 @@ struct Matrix matrix_transposition(struct Matrix A){
 }
 
 // Function to print a matrix
-void printMatrix(struct Matrix A) {
+void print_matrix(struct Matrix A) {
     for (int i = 0; i < A.rows; i++) {
         for (int j = 0; j < A.columns; j++) {
             printf("%f ", A.data[i][j]);
         }
         printf("\n");
     }
+}
+
+void print_vector(struct Vector V) {
+    for (int i = 0; i < V.size; i++) {
+        printf("%f ", V.data[i]);
+    }
+    printf("\n");
 }
 
 // Function to perform row operations on a matrix
@@ -204,6 +211,7 @@ void KalmanIterate(
     x_p = Fx + Gu
     P_p = FPF^t + Q
     */
+
     struct Vector x_p_no_control = vector_multiplication(predParams.model, k->state);
     struct Vector control = vector_multiplication(ctrlParams.control_matrix, ctrlParams.input);
     struct Vector x_p = vector_addition(x_p_no_control, control);
@@ -220,6 +228,11 @@ void KalmanIterate(
     free_matrix(Ft);
     free_matrix(P_p_no_noise);
 
+    //printf("Predicted State:\n");
+    //print_vector(x_p);
+    //printf("Predicted Covariances:\n");
+    //print_matrix(P_p);
+
     // Compute the Kalman Gain
     // KG = (P_p)H^t * (H(P_p)H^T + R)^-1
 
@@ -230,6 +243,9 @@ void KalmanIterate(
     struct Matrix denom_inv = matrix_inverse(denom);
     struct Matrix Ht_denom_inv = matrix_multiplication(Ht, denom_inv);
     struct Matrix KalmanGain = matrix_multiplication(P_p, Ht_denom_inv);
+
+    //printf("Kalman Gain:\n");
+    //print_matrix(KalmanGain);
 
     free_matrix(HP_p);
     free_matrix(Ht);
