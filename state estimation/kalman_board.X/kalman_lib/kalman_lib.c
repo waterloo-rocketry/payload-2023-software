@@ -154,12 +154,10 @@ struct Matrix matrix_inverse(struct Matrix A) {
                 assert(1 == 0);
             }
             // Swap the current row with the row with non-zero entry in the ith column
-            for (int j = 0; j < n; j++){
-                printf("%f ", A.data[i][j]);
-            }
             double* temp = A.data[i];
             A.data[i] = A.data[row_to_swap];
             A.data[row_to_swap] = temp;
+
             temp = A_inv.data[i];
             A_inv.data[i] = A_inv.data[row_to_swap];
             A_inv.data[row_to_swap] = temp;
@@ -196,7 +194,7 @@ void free_vector(struct Vector v) {
 // Kalman Stuff
 
 void KalmanIterate(
-    struct KalmanEntity k,
+    struct KalmanEntity* k,
     struct PredictionParameters predParams,
     struct ControlParameters ctrlParams,
     struct SensorReading snsrReading)
@@ -206,14 +204,14 @@ void KalmanIterate(
     x_p = Fx + Gu
     P_p = FPF^t + Q
     */
-    struct Vector x_p_no_control = vector_multiplication(predParams.model, k.state);
+    struct Vector x_p_no_control = vector_multiplication(predParams.model, k->state);
     struct Vector control = vector_multiplication(ctrlParams.control_matrix, ctrlParams.input);
     struct Vector x_p = vector_addition(x_p_no_control, control);
 
     free_vector(x_p_no_control);
     free_vector(control);
 
-    struct Matrix FP = matrix_multiplication(predParams.model, k.covariance);
+    struct Matrix FP = matrix_multiplication(predParams.model, k->covariance);
     struct Matrix Ft = matrix_transposition(predParams.model);
     struct Matrix P_p_no_noise = matrix_multiplication(FP, Ft);
     struct Matrix P_p = matrix_addition(P_p_no_noise, predParams.prediction_uncertainty);
@@ -256,14 +254,19 @@ void KalmanIterate(
     struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp);
     struct Matrix P_updated = matrix_addition(P_p, negative_change_factor);
 
+    free_matrix(minus_H);
+    free_matrix(minus_HPp);
     free_matrix(negative_change_factor);
 
     free_vector(x_p);
     free_matrix(P_p);
     free_matrix(KalmanGain);
 
-    k.state = x_updated;
-    k.covariance = P_updated;
+    free_vector(k->state);
+    free_matrix(k->covariance);
+
+    k->state = x_updated;
+    k->covariance = P_updated;
 }
 
 /*

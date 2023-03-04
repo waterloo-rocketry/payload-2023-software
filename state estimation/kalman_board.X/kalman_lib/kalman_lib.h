@@ -45,6 +45,8 @@ struct Matrix matrix_inverse(struct Matrix matrix);
 void free_matrix(struct Matrix A);
 void free_vector(struct Vector v);
 
+void printMatrix(struct Matrix A);
+
 // Kalman Library Functions
 
 struct KalmanEntity {
@@ -69,7 +71,7 @@ struct SensorReading {
 };
 
 void KalmanIterate(
-  struct KalmanEntity k,
+  struct KalmanEntity *k,
   struct PredictionParameters predParams,
   struct ControlParameters ctrlParams,
   struct SensorReading snsrReading
