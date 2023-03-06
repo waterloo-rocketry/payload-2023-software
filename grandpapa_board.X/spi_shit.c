@@ -4,12 +4,17 @@
 void spi_init(){
 
     SPI1CON0bits.EN = 0; //Turn off the SPI module to change config
+    
+    SPI1CON2bits.RXR = 1; //Set SPI module to full duplex mode
+    SPI1CON2bits.TXR = 1;
+    SPI1CON0bits.BMODE = 1; //Ignore transfer counter; send/rcv as available
+    
    
     SPI1INTE = 0x00; //disable SPI interrupts - we have a hardware interrupt for CAN Rx
     
-     //Set SCK freq = base clock = 12 MHz (1:1 prescaler)
-     SPI1CLK = 0;
-     SPI1BAUD = 0x00;
+     //Set SCK freq = base clock = 12 MHz (2:1 prescaler)
+     SPI1CLKbits.CLKSEL = 0b0000;
+     SPI1BAUD = 0x01;
     
     SPI1CON0bits.LSBF = 0; //Send most significant bit first
     SPI1CON0bits.MST = 1; //This is the SPI bus master device
@@ -27,8 +32,8 @@ void spi_init(){
      TRISC3 = 0; //SCK pin as output
      TRISC4 = 1; //MISO as input
      
-    //bits 0->2 of ANSELC need to be low
-     ANSELC &= ~(0x07);
+    //bits 0->4 of ANSELC need to be low
+     ANSELC &= ~(0x1F);
      
      //SPI module has a Slave Select function but I'm not using it for now
      //We just treat CS as a GPIO and let canlib drive it
