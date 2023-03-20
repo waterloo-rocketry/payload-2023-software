@@ -14,15 +14,15 @@ void spi_init(){
     
      //Set SCK freq = base clock = 12 MHz (2:1 prescaler)
      SPI1CLKbits.CLKSEL = 0b0000;
-     SPI1BAUD = 0x01;
+     SPI1BAUD = 0x04;
     
     SPI1CON0bits.LSBF = 0; //Send most significant bit first
     SPI1CON0bits.MST = 1; //This is the SPI bus master device
     
     //MCP2515 supports either 0,0 or 1,1 clock settings. We use 0,0 arbitrarily
      SPI1CON1bits.CKP = 0; // Idle state for SCK is low level
-     SPI1CON1bits.CKE = 0; // Output data changes on transition from active to idle clock state
-    
+     SPI1CON1bits.CKE = 1; // 
+   
      SPI1CON0bits.EN = 1; //Turn SPI module on again
     
     

@@ -19,7 +19,7 @@
 #include "interrupt_manager.h"
 #define _XTAL_FREQ  12000000 //Base clock freq is 12 MHz
 
-#define MAX_LOOP_TIME_DIFF_ms 250
+#define MAX_LOOP_TIME_DIFF_ms 2500
 #define LED_1_OFF() (LATC5 = 0)
 #define LED_2_OFF() (LATC6 = 0)
 #define LED_3_OFF() (LATC7 = 0)
@@ -43,13 +43,13 @@ uint8_t tx_pool[100];
 void OSCILLATOR_Initialize() // this is copied from MCC but the registers have been verified
 {
     OSCCON1bits.NDIV = 0x0; //Set oscillator divider to 1:1
-    OSCCON1bits.NOSC = 0x7; //select external oscillator
+    OSCCON1bits.NOSC = 0x2; //select external oscillator w 4x PLL
 
     //wait until the clock switch has happened
     while (OSCCON3bits.ORDY == 0)  {}
 
     //if the currently active clock (CON2) isn't the selected clock (CON1)
-    if (OSCCON2 != 0x70) {
+    if (OSCCON2 != 0x20) {
     //Unhandled error (the oscillator isn't there). Fail fast, with an infinite loop.
         while (1) {}
     }
@@ -62,6 +62,10 @@ void main(void) {
     //Enable global interrupts
     INTERRUPT_GlobalInterruptEnable();
     spi_init();
+    
+    //Enable 12V buck
+    TRISA1 = 0;
+    LATA1 = 1;
     
     //Config for internal CAN controller
     //Set pin RB3 as CAN Rx
@@ -85,7 +89,7 @@ void main(void) {
     //MCP2515
      //Set RC0 as clock output reference at 12 MHz
      CLKRCLKbits.CLK = 0b0000;
-     CLKRCONbits.DIV = 0b001;
+     CLKRCONbits.DIV = 0b010;
      CLKRCONbits.DC = 0b10;
      CLKRCONbits.EN = 1;
      TRISC0 = 0;
