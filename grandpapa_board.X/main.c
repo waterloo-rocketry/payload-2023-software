@@ -19,7 +19,7 @@
 #include "interrupt_manager.h"
 #define _XTAL_FREQ  12000000 //Base clock freq is 12 MHz
 
-#define MAX_LOOP_TIME_DIFF_ms 2500
+#define MAX_LOOP_TIME_DIFF_ms 1000
 #define LED_1_OFF() (LATC5 = 0)
 #define LED_2_OFF() (LATC6 = 0)
 #define LED_3_OFF() (LATC7 = 0)
@@ -89,7 +89,7 @@ void main(void) {
     //MCP2515
      //Set RC0 as clock output reference at 12 MHz
      CLKRCLKbits.CLK = 0b0000;
-     CLKRCONbits.DIV = 0b010;
+     CLKRCONbits.DIV = 0b011;
      CLKRCONbits.DC = 0b10;
      CLKRCONbits.EN = 1;
      TRISC0 = 0;
