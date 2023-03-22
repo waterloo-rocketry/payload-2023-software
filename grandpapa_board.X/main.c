@@ -18,6 +18,7 @@
 #include <xc.h> //should be after any pragma statements
 #include "interrupt_manager.h"
 #define _XTAL_FREQ  12000000 //Base clock freq is 12 MHz
+#define _MCP_FREQ  6000000 //Base clock freq is 12 MHz
 
 #define MAX_LOOP_TIME_DIFF_ms 1000
 #define LED_1_OFF() (LATC5 = 0)
@@ -43,16 +44,17 @@ uint8_t tx_pool[100];
 void OSCILLATOR_Initialize() // this is copied from MCC but the registers have been verified
 {
     OSCCON1bits.NDIV = 0x0; //Set oscillator divider to 1:1
-    OSCCON1bits.NOSC = 0x2; //select external oscillator w 4x PLL
+    OSCCON1bits.NOSC = 0b111; //select external oscillator w/o  (12MHz))
+    
 
     //wait until the clock switch has happened
     while (OSCCON3bits.ORDY == 0)  {}
 
     //if the currently active clock (CON2) isn't the selected clock (CON1)
-    if (OSCCON2 != 0x20) {
+    //if (OSCCON2 != 0x20) {
     //Unhandled error (the oscillator isn't there). Fail fast, with an infinite loop.
-        while (1) {}
-    }
+   //     while (1) {}
+    //}
 }
 
 void main(void) {
@@ -79,7 +81,9 @@ void main(void) {
     
     //Canlib initializations for PIC18 CAN module and MCP2515
      can_timing_t can_params;
+     can_timing_t can_params_mcp;
      can_generate_timing_params(_XTAL_FREQ, &can_params); //Store all the custom timing parameters in a fancy struct
+     can_generate_timing_params(_MCP_FREQ, &can_params_mcp);
     
      can_init(&can_params, can_msg_handler); //Point canlib to our timing parameters and custom message handler
     
@@ -88,16 +92,16 @@ void main(void) {
     
     //MCP2515
      //Set RC0 as clock output reference at 12 MHz
-     CLKRCLKbits.CLK = 0b0000;
-     CLKRCONbits.DIV = 0b011;
-     CLKRCONbits.DC = 0b10;
+     CLKRCLKbits.CLK = 0b0000; //select Fosc (12MHz))
+     CLKRCONbits.DIV = 0b001; // 1:2 clock divider 6MHz
+     CLKRCONbits.DC = 0b10; //50% duty cycle
      CLKRCONbits.EN = 1;
      TRISC0 = 0;
      RC0PPS = 0b100111;
      
-     for(int i=0;i<1000;i++);
+     //for(int i=0;i<1000;i++);
      
-     mcp_can_init(&can_params, read_spi_byte, write_spi_byte, drive_mcp_cs);
+     mcp_can_init(&can_params_mcp, read_spi_byte, write_spi_byte, drive_mcp_cs);
      
     
     //Timing stuff
