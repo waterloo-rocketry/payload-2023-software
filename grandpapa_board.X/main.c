@@ -30,13 +30,14 @@
 #define BOARD_ID = 0x13
 
 static void can_msg_handler(const can_msg_t *msg); //called during ISR when the PIC CAN module triggers
-static void mcp_msg_handler(can_msg_t *msg); //manually called when 
+static void mcp_can_msg_handler(const can_msg_t *msg);
 static void send_status_ok(void); //send a "nominal" message, whatever that means for us
 static void send_status_ok_mcp(void);
 
 static uint8_t read_spi_byte(void);
 static void write_spi_byte(uint8_t data);
 static void drive_mcp_cs(uint8_t state);
+
 
 // Statically allocate memory pool for CAN transmit buffer
 uint8_t tx_pool[100];
@@ -84,9 +85,9 @@ void main(void) {
      can_timing_t can_params_mcp;
      can_generate_timing_params(_XTAL_FREQ, &can_params); //Store all the custom timing parameters in a fancy struct
      can_generate_timing_params(_MCP_FREQ, &can_params_mcp);
+     
     
      can_init(&can_params, can_msg_handler); //Point canlib to our timing parameters and custom message handler
-    
      txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy); //Point canlib to the chunk of memory we just allocated for a transmit buffer
                                                                  //can_send and can_send_ready are MCU-specific functions
     
@@ -97,12 +98,15 @@ void main(void) {
      CLKRCONbits.DC = 0b10; //50% duty cycle
      CLKRCONbits.EN = 1;
      TRISC0 = 0;
-     RC0PPS = 0b100111;
-     
-     //for(int i=0;i<1000;i++);
+     RC0PPS = 0b100111; //Assign clock ref module to pin RC0
      
      mcp_can_init(&can_params_mcp, read_spi_byte, write_spi_byte, drive_mcp_cs);
      
+     //MCP CAN Receive Interrupt
+     //IOCAN5 = 1; //Enable interrupt on falling edge at RA5
+     //IOCIE = 1; //Global enable for IOC module
+     TRISA5 = 1; //Set RA5 to input
+     ANSELA5 = 0; //Disable ANSEL reeeee
     
     //Timing stuff
     timer0_init();
@@ -121,14 +125,19 @@ void main(void) {
     while (1) {
         if(millis()- last_millis > MAX_LOOP_TIME_DIFF_ms){
             LATC5 = ~LATC5;
-            //LATC6 = ~LATC6;
-            //LATC7 = ~LATC7;
-            send_status_ok_mcp();
-            //write_spi_byte(0x0F);
-
+            
+            //send_status_ok_mcp();
+            
             last_millis = millis();
         }
-       
+        
+        if(!PORTAbits.RA5){
+            can_msg_t rcv;
+            if (mcp_can_receive(&rcv)) 
+            {
+                    mcp_can_msg_handler(&rcv);
+            }
+        }
         //txb_heartbeat();
     }
     return;
@@ -200,5 +209,21 @@ static void write_spi_byte(uint8_t data){
     SPI1TXB = data;
     while(!SPI1TXBE);
     uint8_t temp = SPI1RXB; //read from the RXFIFO to hopefully purge it
+}
+
+static void mcp_can_msg_handler(const can_msg_t *msg) {
+    uint16_t msg_type = get_message_type(msg);
+    switch(msg_type){
+        case MSG_LEDS_ON:
+            LED_1_ON();
+            LED_2_ON();
+            LED_3_ON();
+            break;
+        case MSG_LEDS_OFF:
+            LED_1_OFF();
+            LED_2_OFF();
+            LED_3_OFF();
+            break;  
+    }  
 }
 
