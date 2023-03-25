@@ -201,10 +201,10 @@ static void send_status_ok_mcp(void) {
     mcp_can_send(&board_stat_msg);
 }
 
-static void send_status_ok_mcp(void) {
+static void send_log_msgs(void) {
     can_msg_t batt_cur_msg;
     uint16_t batt_cur = ADCC_GetSingleConversion(channel_BATT_CURR)/2;
-    build_analog_data_msg(millis(), SENSOR_BATT_CURR, batt_curr, &batt_cur_msg);
+    build_analog_data_msg(millis(), SENSOR_BATT_CURR, batt_cur, &batt_cur_msg);
     txb_enqueue(&batt_cur_msg);
     
     can_msg_t batt_volt_msg;
@@ -214,7 +214,7 @@ static void send_status_ok_mcp(void) {
 
     can_msg_t aux_cur_msg;
     uint16_t aux_cur = ADCC_GetSingleConversion(channel_AUX_CURR)/2;
-    build_analog_data_msg(millis(), SENSOR_MAG_2, aux_curr, &aux_cur_msg);
+    build_analog_data_msg(millis(), SENSOR_MAG_2, aux_cur, &aux_cur_msg);
     txb_enqueue(&aux_cur_msg);
 }
 
