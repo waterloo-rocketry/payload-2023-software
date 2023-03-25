@@ -14,6 +14,9 @@
 #include "canlib/mcp2515/mcp_2515.h"
 #include "spi_shit.h"
 
+#include "mcc_generated_files/adcc.h"
+#include "mcc_generated_files/fvr.h"
+
 // MPLAB Stuff
 #include <xc.h> //should be after any pragma statements
 #include "interrupt_manager.h"
@@ -33,6 +36,7 @@ static void can_msg_handler(const can_msg_t *msg); //called during ISR when the 
 static void mcp_can_msg_handler(const can_msg_t *msg);
 static void send_status_ok(void); //send a "nominal" message, whatever that means for us
 static void send_status_ok_mcp(void);
+static void send_log_msgs(void);
 
 static uint8_t read_spi_byte(void);
 static void write_spi_byte(uint8_t data);
@@ -59,6 +63,10 @@ void OSCILLATOR_Initialize() // this is copied from MCC but the registers have b
 }
 
 void main(void) {
+    // initialize mcc functions
+    ADCC_Initialize();
+    FVR_Initialize();
+
     //Initialize Oscillator (External 12MHz crystal; See config registers for add'l settings)
     OSCILLATOR_Initialize();
     
@@ -127,7 +135,7 @@ void main(void) {
             LATC5 = ~LATC5;
             
             //send_status_ok_mcp();
-            
+            send_log_msgs();
             last_millis = millis();
         }
         
@@ -138,7 +146,7 @@ void main(void) {
                     mcp_can_msg_handler(&rcv);
             }
         }
-        //txb_heartbeat();
+        txb_heartbeat();
     }
     return;
 }
@@ -191,6 +199,23 @@ static void send_status_ok_mcp(void) {
     // send it off
     while(!mcp_can_send_rdy());
     mcp_can_send(&board_stat_msg);
+}
+
+static void send_status_ok_mcp(void) {
+    can_msg_t batt_cur_msg;
+    uint16_t batt_cur = ADCC_GetSingleConversion(channel_BATT_CURR)/2;
+    build_analog_data_msg(millis(), SENSOR_BATT_CURR, batt_curr, &batt_cur_msg);
+    txb_enqueue(&batt_cur_msg);
+    
+    can_msg_t batt_volt_msg;
+    uint16_t batt_volt = ADCC_GetSingleConversion(channel_BATT_VOLT);
+    build_analog_data_msg(millis(), SENSOR_MAG_1, batt_volt, &batt_volt_msg);
+    txb_enqueue(&batt_volt_msg);
+
+    can_msg_t aux_cur_msg;
+    uint16_t aux_cur = ADCC_GetSingleConversion(channel_AUX_CURR)/2;
+    build_analog_data_msg(millis(), SENSOR_MAG_2, aux_curr, &aux_cur_msg);
+    txb_enqueue(&aux_cur_msg);
 }
 
 static void drive_mcp_cs(uint8_t state){

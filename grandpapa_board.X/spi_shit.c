@@ -40,4 +40,12 @@ void spi_init(){
      RC2PPS = 0b011111; //Set pin C2 as SDO (MOSI)
      RC3PPS = 0b011110; //Set pin C3 as SCK
      SPI1SDIPPS = 0b10100; //Set pin C4 as SDI (MISO)
+
+    //  these don't belong here but i need to define somewhere
+    TRISA2 = 1;
+    TRISA3 = 1;
+    TRISA4 = 1;
+    ANSELA2 = 1;
+    ANSELA3 = 1;
+    ANSELA4 = 1;
 }
