@@ -33,7 +33,7 @@ static void send_status_life_off_mcp(void);
 static uint8_t read_spi_byte(void);
 static void write_spi_byte(uint8_t data);
 static void drive_mcp_cs(uint8_t state);
-
+static uint8_t stateEstimationCount;
 // Statically allocate memory pool for CAN transmit buffer
 uint8_t tx_pool[100];
 
@@ -230,7 +230,30 @@ static void write_spi_byte(uint8_t data) {
 
 static void mcp_can_msg_handler(const can_msg_t *msg) {
     uint16_t msg_type = get_message_type(msg);
+
+    // ignore messages that were sent from this board
+    if (get_board_unique_id(msg) == BOARD_ID) {
+        return;
+    }
+
     switch (msg_type) {
+        // forward all board status messages to RocketCAN
+        case MSG_GENERAL_BOARD_STATUS:
+            txb_enqueue(&msg);
+            break;
+
+        /*
+        case <kalman board message>:
+            stateEstimationCount++;
+            if (stateEstimationCount == STATE_ESTIMATION_FREQUENCY) {
+                stateEstimationCount = 0;
+                txb_enqueue(&msg);
+            }
+            break;
+        // not sure if its ever nest MSG_GENERAL_BOARD_STATUS after reseting count, so that its clear that we're just
+        // relaying certain messages over to RocketCAN
+        */
+
         case MSG_LEDS_ON:
             WHITE_LED_SET(true);
             RED_LED_SET(true);
