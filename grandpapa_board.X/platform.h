@@ -6,7 +6,7 @@
 // Time between main loop code execution
 #define MAX_LOOP_TIME_DIFF_ms 1000
 // no one has ever done this before, um, double check with jack TODO:
-#define BOARD_ID = 0x13
+#define BOARD_ID 0x13
 
 void papa_init(void);
 

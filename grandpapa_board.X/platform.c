@@ -6,7 +6,7 @@
 #define CAN_5V_ON 1
 #define POWER_12V_ON 1
 
-void pin_init(void) {
+void papa_init(void) {
     // LEDS
     TRISC5 = 0; // set white LED pin as output
     ANSELC5 = 0; // enable digital input buffer (Useful for reading the LED state)
