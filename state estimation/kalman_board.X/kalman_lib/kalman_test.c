@@ -71,7 +71,5 @@ int main() {
         update();
         KalmanIterate(&k, predParams, ctrlParams, snsrReading);
     }
-
-    free_vector(k.state);
-    free_matrix(k.covariance);
+    
 }

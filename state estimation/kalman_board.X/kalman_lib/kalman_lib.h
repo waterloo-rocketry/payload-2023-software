@@ -34,16 +34,34 @@ struct Vector {
   int size;
 };
 
+// struct BufferStruct {
+//     double* vector1;
+//     double* vector2;
+//     double* vector3;
+//     double* vector4;
+//     double* vector5;
+//     double** matrix1;
+//     double** matrix2;
+//     double** matrix3;
+//     double** matrix4;
+//     double** matrix5;
+//     double** matrix6;
+//     double** matrix7;
+//     double** matrix8;
+//     double** matrix9;
+    
+// };
 
-struct Matrix matrix_addition(struct Matrix A, struct Matrix B);
-struct Matrix scalar_multiplication(struct Matrix A, double s);
-struct Vector vector_multiplication(struct Matrix A, struct Vector B);
-struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B);
-struct Matrix matrix_transposition(struct Matrix A);
+
+struct Matrix matrix_addition(struct Matrix A, struct Matrix B, double* result_data[]);
+struct Matrix scalar_multiplication(struct Matrix A, double s, double* result_data[]);
+struct Vector vector_multiplication(struct Matrix A, struct Vector B, double array[]);
+struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B, double* result_data[]);
+struct Matrix matrix_transposition(struct Matrix A, double* result_data[]);
+
 void row_operation(struct Matrix A, int recvRow, int sendRow, double scalar);
-struct Matrix matrix_inverse(struct Matrix matrix);
-void free_matrix(struct Matrix A);
-void free_vector(struct Vector v);
+struct Matrix matrix_inverse(struct Matrix matrix, double* inverse_data[]);
+
 
 void print_matrix(struct Matrix A);
 
