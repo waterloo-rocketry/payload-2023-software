@@ -178,6 +178,8 @@ void SYS_Initialize ( void* data )
 
 	GPIO_Initialize();
 
+    CAN2_Initialize();
+
 	UART6_Initialize();
 
 

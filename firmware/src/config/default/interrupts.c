@@ -60,6 +60,7 @@
 // *****************************************************************************
 
 
+void CAN2_InterruptHandler( void );
 void UART6_FAULT_InterruptHandler( void );
 void UART6_RX_InterruptHandler( void );
 void UART6_TX_InterruptHandler( void );
@@ -67,6 +68,11 @@ void UART6_TX_InterruptHandler( void );
 
 
 /* All the handlers are defined here.  Each will call its PLIB-specific function. */
+void __ISR(_CAN2_VECTOR, ipl1SRS) CAN2_Handler (void)
+{
+    CAN2_InterruptHandler();
+}
+
 void __ISR(_UART6_FAULT_VECTOR, ipl1SRS) UART6_FAULT_Handler (void)
 {
     UART6_FAULT_InterruptHandler();
