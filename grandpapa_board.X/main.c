@@ -27,7 +27,6 @@ static void can_msg_handler(const can_msg_t *msg); // called during ISR when the
 static void mcp_can_msg_handler(const can_msg_t *msg);
 static void send_status_ok(void); // send a "nominal" message, whatever that means for us
 static void send_mcp_msg(const can_msg_t *msg);
-static void send_status_ok_mcp(void);
 static void send_status_life_off_mcp(void);
 
 static uint8_t read_spi_byte(void);
@@ -132,15 +131,13 @@ void main(void) {
 }
 
 static void __interrupt() interrupt_handler(void) {
-    if (PIR5)
-    {
+    if (PIR5) {
         can_handle_interrupt();
     }
 
     // Timer0 has overflowed - update millis() function
     // This happens approximately every 500us
-    if (PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1)
-    {
+    if (PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1) {
         timer0_handle_interrupt();
         PIR3bits.TMR0IF = 0;
     }
@@ -166,16 +163,22 @@ static void can_msg_handler(const can_msg_t *msg) {
             act_state = get_req_actuator_state(msg);
 
             if (act_id == ACTUATOR_PAYLOAD) {
+                if (act_state != ACTUATOR_ON && act_state != ACTUATOR_OFF) {
+                    return;
+                }
                 // (dis)connect from 12V
-                POWER_12V_SET(act_state == 0); // this is so ghetto but i think it works
+                POWER_12V_SET(act_state == ACTUATOR_ON);
             }
-            else if (act_id == ACTUATOR_VENT_VALVE) { // TODO: this needs to be like ACTUATOR_PAYLOAD_CANBUS or smth
+            else if (act_id == ACTUATOR_PAYLOAD_CANBUS) { // TODO: this needs to be added onto canlib
+                if (act_state != ACTUATOR_ON && act_state != ACTUATOR_OFF) {
+                    return;
+                }
                 // turn on/off PayloadCAN
-                CAN_5V_SET(act_state == 0); // this is so ghetto but i think it works
+                CAN_5V_SET(act_state == ACTUATOR_ON);
             }
             else if (act_id == ACTUATOR_INJECTOR_VALVE) {
                 // rocket is flying, relay this message to PayloadCAN for Kalman board
-                send_mcp_msg(&msg);
+                send_mcp_msg(msg);
             }
             break;
 
@@ -205,7 +208,7 @@ static void send_status_ok(void) {
 static void send_mcp_msg(const can_msg_t *msg) {
     // send it off
     while (!mcp_can_send_rdy()) {}
-    mcp_can_send(&msg);
+    mcp_can_send(msg);
 }
 
 static void drive_mcp_cs(uint8_t state) {
@@ -239,7 +242,7 @@ static void mcp_can_msg_handler(const can_msg_t *msg) {
     switch (msg_type) {
         // forward all board status messages to RocketCAN
         case MSG_GENERAL_BOARD_STATUS:
-            txb_enqueue(&msg);
+            txb_enqueue(msg);
             break;
 
         /*
@@ -247,11 +250,9 @@ static void mcp_can_msg_handler(const can_msg_t *msg) {
             stateEstimationCount++;
             if (stateEstimationCount == STATE_ESTIMATION_FREQUENCY) {
                 stateEstimationCount = 0;
-                txb_enqueue(&msg);
+                txb_enqueue(msg);
             }
             break;
-        // not sure if its ever nest MSG_GENERAL_BOARD_STATUS after reseting count, so that its clear that we're just
-        // relaying certain messages over to RocketCAN
         */
 
         case MSG_LEDS_ON:
