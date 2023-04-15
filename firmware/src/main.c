@@ -46,8 +46,8 @@ int main ( void )
     SYS_Initialize ( NULL );
     UART6_Write(&buffer[0], sizeof(buffer));
     //
-    CAN2_CallbackRegister(can_msg_handle, NULL, 0);
-    
+    CAN2_CallbackRegister(can_msg_handle, (uintptr_t)NULL, 1);
+
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
 
     while ( true )
@@ -68,7 +68,7 @@ void can_msg_handle(uintptr_t context)
     uint16_t timestamp;
     CAN_MSG_RX_ATTRIBUTE frame_type;
     CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 0, &frame_type);
-    
+
     uint16_t msg_id = id & 0x7E0;
     switch (msg_id) {
         case MSG_LEDS_ON:
