@@ -1,5 +1,5 @@
 #include "kalman_lib.h"
-#include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -126,23 +126,6 @@ struct Matrix matrix_transposition(struct Matrix A, double *result_data[]){
     return result;
 }
 
-// Function to print a matrix
-void print_matrix(struct Matrix A) {
-    for (int i = 0; i < A.rows; i++) {
-        for (int j = 0; j < A.columns; j++) {
-            printf("%f ", A.data[i][j]);
-        }
-        printf("\n");
-    }
-}
-
-void print_vector(struct Vector V) {
-    for (int i = 0; i < V.size; i++) {
-        printf("%f ", V.data[i]);
-    }
-    printf("\n");
-}
-
 // Function to perform row operations on a matrix
 void row_operation(struct Matrix A, int recvRow, int sendRow, double scalar) {
     assert(recvRow < A.rows);
@@ -207,6 +190,33 @@ struct Matrix matrix_inverse(struct Matrix A, double *inverse_data[]) {
     }
 
     return A_inv;
+}
+
+struct Vector cross_product(struct Vector A, struct Vector B, double *buf) {
+    assert(A.size == B.size);
+    assert(A.size == 3);
+
+    buf[0] = A.data[1] * B.data[2] - A.data[2] * B.data[1];
+    buf[1] = A.data[2] * B.data[0] - A.data[0] * B.data[2];
+    buf[2] = A.data[0] * B.data[1] - A.data[1] * B.data[0];
+
+    struct Vector result = (struct Vector) {buf, 3};
+    return result;
+}
+
+double dot_product(struct Vector A, struct Vector B) {
+    assert(A.size == B.size);
+    double output = 0;
+
+    for (int i = 0; i < A.size; ++i) {
+        output += A[i] * B[i];
+    }
+
+    return output;
+}
+
+double norm(struct Vector A) {
+    return sqrt(dot_product(A, A));
 }
 
 // Kalman Stuff
