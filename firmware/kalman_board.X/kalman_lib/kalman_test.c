@@ -1,75 +1,36 @@
-#include "kalman_lib.h"
+#include "data.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-double q0[2] = {0, 0};
-double q1[2] = {0,0};
-double* Q_arr[2] = {q0, q1};
+double conv0[3];
+double conv1[3];
+double conv2[3];
+double *conv[3] = {conv0, conv1, conv2};
 
-double f0[2] = {1, 0};
-double f1[2] = {0, 1};
-double* F_arr[2] = {f0, f1};
+double a_prev[3];
+double x_prev[3];
 
-double g0[1] = {0};
-double g1[1] = {0};
-double* G_arr[2] = {g0, g1};
-
-double u_inp[1] = {0};
-
-double h0[2] = {1, 0};
-double h1[2] = {0, 1};
-double* H_arr[2] = {h0, h1};
-
-double r0[2] = {1, 0};
-double r1[2] = {0, 1};
-double* R_arr[2] = {r0, r1};
-double z_inp[2] = {0, 0};
-
-double time = 0.0;
-
-void update() {
-    double new_time;
-    scanf("%lf,%lf,%lf", &new_time, z_inp, z_inp + 1);
-
-    F_arr[0][1] = new_time - time;
-    time = new_time;
-}
+double a_corr[3];
 
 int main() {
-    struct KalmanEntity k;
-    k.state = (struct Vector) {malloc(2 * sizeof(double)), 2};
-    k.state.data[0] = k.state.data[1] = 0;
-
-    k.covariance = (struct Matrix) {malloc(2 * sizeof(double*)), 2, 2};
-    k.covariance.data[0] = malloc(2 * sizeof(double*));
-    k.covariance.data[1] = malloc(2 * sizeof(double*));
-
-    k.covariance.data[0][0] = k.covariance.data[1][1] = 1;
-    k.covariance.data[1][0] = k.covariance.data[0][1] = 0;
-
-    struct PredictionParameters predParams;
-    struct Matrix model;
-    model.data = F_arr;
-    model.rows = 2;
-    model.columns = 2;
-    predParams.model = model; //(struct Matrix) { (double**) F_arr, 2, 2};
-    predParams.prediction_uncertainty = (struct Matrix) { Q_arr, 2, 2};
-
-    struct ControlParameters ctrlParams;
-    ctrlParams.control_matrix = (struct Matrix) { G_arr, 2, 1};
-    ctrlParams.input = (struct Vector) {u_inp, 1};
-
-    struct SensorReading snsrReading;
-    snsrReading.sensor_matrix = (struct Matrix) {H_arr, 2, 2};
-    snsrReading.sensor_uncertainty = (struct Matrix) { R_arr, 2, 2};
-    snsrReading.sensor_reading = (struct Vector) {z_inp, 2};
-
     for (int i = 0; i < 1000; ++i) {
 
-        printf("%f,%f,%f,%f\n", k.state.data[0], k.state.data[1], z_inp[0], z_inp[1]);
+        // Pull 'sensor readings' from files
+        double new_time;
+        scanf("%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf", &new_time, &ap, &av, x_prev, a_prev, x_prev + 1, a_prev + 1, x_prev + 2, a_prev + 2);
 
-        update();
-        KalmanIterate(&k, predParams, ctrlParams, snsrReading);
+        update_rotation_filter(new_time, ap, av);
+        struct Vector vel = (struct Vector) {get_velocity(), 3};
+        struct Matrix Conv = reference_frame_correction(vel, get_angle(), conv);
+            
+        struct Vector A_corr = vector_multiplication(Conv, (struct Vector) {a_prev, 3} , a_corr);
+        //struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
+
+        update_velocity_filter(new_time, x_prev[0], a_corr[0], x_prev[1], a_corr[1], x_prev[2], a_corr[2]);
+
+        const double *state = get_state()
+
+        printf("%f,%f,%f,%f,%f,%f,%f,%f,%f\n", state[0], state[1], state[2], state[3], state[4], state[5], state[6], state[7], state[8]);
     }
     
 }

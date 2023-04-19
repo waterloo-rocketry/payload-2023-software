@@ -1,20 +1,3 @@
-/* ************************************************************************** */
-/** Descriptive File Name
-
-  @Company
-    Company Name
-
-  @File Name
-    filename.h
-
-  @Summary
-    Brief description of the file.
-
-  @Description
-    Describe the purpose of this file.
- */
-/* ************************************************************************** */
-
 #ifndef KALMAN_LIB
 #define KALMAN_LIB
 #include <stdio.h>
