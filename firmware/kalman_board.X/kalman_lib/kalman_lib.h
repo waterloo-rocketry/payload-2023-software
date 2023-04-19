@@ -55,24 +55,24 @@ void print_matrix(struct Matrix A);
 // Kalman Library Functions
 
 struct KalmanEntity {
-  struct Vector state;
-  struct Matrix covariance;
+  struct Vector * state;
+  struct Matrix * covariance;
 };
 
 struct PredictionParameters {
-  struct Matrix model; // F
-  struct Matrix prediction_uncertainty; // Q
+  struct Matrix * model; // F
+  struct Matrix * prediction_uncertainty; // Q
 };
 
 struct ControlParameters {
-  struct Matrix control_matrix; // G
-  struct Vector input; // u
+  struct Matrix * control_matrix; // G
+  struct Vector * input; // u
 };
 
 struct SensorReading {
-  struct Matrix sensor_matrix; // H
-  struct Matrix sensor_uncertainty; // R
-  struct Vector sensor_reading; // z
+  struct Matrix * sensor_matrix; // H
+  struct Matrix * sensor_uncertainty; // R
+  struct Vector * sensor_reading; // z
 };
 
 void KalmanIterate(

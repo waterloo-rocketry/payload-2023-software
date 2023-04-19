@@ -234,30 +234,30 @@ void KalmanIterate(
     P_p = FPF^t + Q
     */
 
-    struct Vector x_p_no_control = vector_multiplication(predParams.model, k->state, vector1);
-    struct Vector control = vector_multiplication(ctrlParams.control_matrix, ctrlParams.input, vector3);
+    struct Vector x_p_no_control = vector_multiplication(*(predParams.model), *(k->state), vector1);
+    struct Vector control = vector_multiplication(*(ctrlParams.control_matrix), *(ctrlParams.input), vector3);
     struct Vector x_p = vector_addition(x_p_no_control, control, vector2);
-    struct Matrix FP = matrix_multiplication(predParams.model, k->covariance, matrix1);
-    struct Matrix Ft = matrix_transposition(predParams.model, matrix2);
+    struct Matrix FP = matrix_multiplication(*(predParams.model), *(k->covariance), matrix1);
+    struct Matrix Ft = matrix_transposition(*(predParams.model), matrix2);
     struct Matrix P_p_no_noise = matrix_multiplication(FP, Ft, matrix3);
-    struct Matrix P_p = matrix_addition(P_p_no_noise, predParams.prediction_uncertainty, matrix4);
+    struct Matrix P_p = matrix_addition(P_p_no_noise, *(predParams.prediction_uncertainty), matrix4);
 
 
     // Compute the Kalman Gain
     // KG = (P_p)H^t * (H(P_p)H^T + R)^-1
 
-    struct Matrix HP_p = matrix_multiplication(snsrReading.sensor_matrix, P_p, matrix1);
-    struct Matrix Ht = matrix_transposition(snsrReading.sensor_matrix, matrix2);
+    struct Matrix HP_p = matrix_multiplication(*(snsrReading.sensor_matrix), P_p, matrix1);
+    struct Matrix Ht = matrix_transposition(*(snsrReading.sensor_matrix), matrix2);
     struct Matrix denom_no_noise = matrix_multiplication(HP_p, Ht, matrix3);
-    struct Matrix denom = matrix_addition(denom_no_noise, snsrReading.sensor_uncertainty, matrix5);
+    struct Matrix denom = matrix_addition(denom_no_noise, *(snsrReading.sensor_uncertainty), matrix5);
     struct Matrix denom_inv = matrix_inverse(denom, matrix6);
     struct Matrix Ht_denom_inv = matrix_multiplication(Ht, denom_inv, matrix7);
     struct Matrix KalmanGain = matrix_multiplication(P_p, Ht_denom_inv, matrix8);
 
     // Compute the update predictions
-    struct Matrix minus_H = scalar_multiplication(snsrReading.sensor_matrix, -1, matrix1);
+    struct Matrix minus_H = scalar_multiplication(*(snsrReading.sensor_matrix), -1, matrix1);
     struct Vector minus_Hxp = vector_multiplication(minus_H, x_p, vector1);
-    struct Vector z_minus_Hxp = vector_addition(snsrReading.sensor_reading, minus_Hxp, vector3);
+    struct Vector z_minus_Hxp = vector_addition(*(snsrReading.sensor_reading), minus_Hxp, vector3);
     struct Vector change_factor_x = vector_multiplication(KalmanGain, z_minus_Hxp, vector4);
     struct Vector x_updated = vector_addition(x_p, change_factor_x, vector5);
 
@@ -266,7 +266,20 @@ void KalmanIterate(
     struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp, matrix3);
     struct Matrix P_updated = matrix_addition(P_p, negative_change_factor, matrix5);
 
-    k->state = x_updated;
-    k->covariance = P_updated;
+    // Deep Copy the new values so that we can safely leave x_updated and P_updated to go out of scope
+
+    //k->state = x_updated;
+    k->state->size = x_updated.size;
+    for (int i = 0; i < x_updated.size; i++){
+      k->state->data[i] = x_updated.data[i];
+    }
+    
+    //k->covariance = P_updated;
+    k->covariance->rows = P_updated.rows;
+    k->covariance->columns = P_updated.columns;
+    for (int i = 0; i < P_updated.rows; i++){
+      for (int j = 0; j < P_updated.columns; j++)
+        k->covariance->data[i][j] = P_updated.data[i][j];
+    }
 }
 
