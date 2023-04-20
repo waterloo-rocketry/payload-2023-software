@@ -154,8 +154,8 @@ double z_inp[6] = {0, 0, 0, 0, 0, 0};
 struct Vector z_vel = (struct Vector) {z_inp, 6};
 
 // Kalman Entity
-double x_cv[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-struct Vector x_vel = (struct Vector) {x_cv, 2};
+double x_sv[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+struct Vector x_vel = (struct Vector) {x_sv, 2};
 
 double p_cv0[9] = {1, 0, 0, 0, 0, 0, 0, 0, 0};
 double p_cv1[9] = {0, 1, 0, 0, 0, 0, 0, 0, 0};
@@ -193,11 +193,11 @@ void update_velocity_filter(double new_time, double x, double a_x, double y, dou
 
 double velocity[3];
 double* get_velocity() {
-  velocity[0] = x_cv[1];
-  velocity[1] = x_cv[4];
-  velocity[2] = x_cv[7];
+  velocity[0] = x_sv[1];
+  velocity[1] = x_sv[4];
+  velocity[2] = x_sv[7];
 
   return velocity;
 }
 
-double *get_state() { return x_cv; }
+double *get_state() { return x_sv; }

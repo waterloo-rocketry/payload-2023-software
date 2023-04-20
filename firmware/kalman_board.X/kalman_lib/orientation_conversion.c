@@ -4,16 +4,11 @@
 
 struct Matrix reference_frame_correction(struct Vector velocity, double angle, double **buffer) {
     // we require velocity to be normalized.
-    
-    // identity
-    double iden0[3] = {1, 0, 0};
-    double iden1[3] = {0, 1, 0};
-    double iden2[3] = {0, 0, 1};
-    double *iden[3] = {iden0, iden1, iden2};
-    struct Matrix Iden = {iden, 3, 3};
+    buffer[0][0] = buffer[1][1] = buffer[2][2] = 1;
+    buffer[0][1] = buffer[0][2] = buffer[1][0] = buffer[1][2] = buffer[2][0] = buffer[2][1] = 0;
 
     if (velocity.data[0] == 0 && velocity.data[1] == 0 && velocity.data[2] == -1) {
-        return Iden;
+      return (struct Matrix) {buffer, 3, 3};
     }
     
     /* Computing the rotation due to theta */
@@ -38,6 +33,13 @@ struct Matrix reference_frame_correction(struct Vector velocity, double angle, d
     double align2[3] = {-v.data[1], v.data[0], 0};
     double *align[3] = {align0, align1, align2};
     struct Matrix Align = {align, 3, 3};
+
+    // identity
+    double iden0[3] = {1, 0, 0};
+    double iden1[3] = {0, 1, 0};
+    double iden2[3] = {0, 0, 1};
+    double *iden[3] = {iden0, iden1, iden2};
+    struct Matrix Iden = {iden, 3, 3};
 
     // buffers
     double b10[3];

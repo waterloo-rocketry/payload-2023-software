@@ -3,39 +3,40 @@
 #include <stdlib.h>
 #include <assert.h>
 
-const int MATRIX_SIZE = 2;
-double vector1[2] = {0,0};
-double vector2[2] = {0,0};
-double vector3[2] = {0,0};
-double vector4[2] = {0,0};
-double vector5[2] = {0,0};
-double n1[2] = {0,0};
-double m1[2] = {0,0};
-double* matrix1[2] = {n1,m1};
-double n2[2] = {0,0};
-double m2[2] = {0,0};
-double* matrix2[2] = {n2,m2};
-double n3[2] = {0,0};
-double m3[2] = {0,0};
-double* matrix3[2] = {n3,m3};
-double n4[2] = {0,0};
-double m4[2] = {0,0};
-double* matrix4[2] = {n4,m4};
-double n5[2] = {0,0};
-double m5[2] = {0,0};
-double* matrix5[2] = {n5, m5};
-double n6[2] = {0,0};
-double m6[2] = {0,0};
-double* matrix6[2] = {n6,m6};
-double n7[2] = {0,0};
-double m7[2] = {0,0};
-double* matrix7[2] = {n7, m7};
-double n8[2] = {0,0};
-double m8[2] = {0,0};
-double* matrix8[2] = {n8,m8};
-double n9[2] = {0,0};
-double m9[2] = {0,0};
-double* matrix9[2] = {n9, m9};
+// MOVE THESE TO A NEW HEADER & 9x9s
+const int MATRIX_SIZE = 9;
+double vector1[9] = {0,0};
+double vector2[9] = {0,0};
+double vector3[9] = {0,0};
+double vector4[9] = {0,0};
+double vector5[9] = {0,0};
+double n1[9] = {0,0};
+double m1[9] = {0,0};
+double* matrix1[9] = {n1,m1};
+double n2[9] = {0,0};
+double m2[9] = {0,0};
+double* matrix2[9] = {n2,m2};
+double n3[9] = {0,0};
+double m3[9] = {0,0};
+double* matrix3[9] = {n3,m3};
+double n4[9] = {0,0};
+double m4[9] = {0,0};
+double* matrix4[9] = {n4,m4};
+double n5[9] = {0,0};
+double m5[9] = {0,0};
+double* matrix5[9] = {n5, m5};
+double n6[9] = {0,0};
+double m6[9] = {0,0};
+double* matrix6[9] = {n6,m6};
+double n7[9] = {0,0};
+double m7[9] = {0,0};
+double* matrix7[9] = {n7, m7};
+double n8[9] = {0,0};
+double m8[9] = {0,0};
+double* matrix8[9] = {n8,m8};
+double n9[9] = {0,0};
+double m9[9] = {0,0};
+double* matrix9[9] = {n9, m9};
 
 //to run:   k.exe < inputfile.in > outputfile.out
 
@@ -259,27 +260,11 @@ void KalmanIterate(
     struct Vector minus_Hxp = vector_multiplication(minus_H, x_p, vector1);
     struct Vector z_minus_Hxp = vector_addition(*(snsrReading.sensor_reading), minus_Hxp, vector3);
     struct Vector change_factor_x = vector_multiplication(KalmanGain, z_minus_Hxp, vector4);
-    struct Vector x_updated = vector_addition(x_p, change_factor_x, vector5);
+    struct Vector x_updated = vector_addition(x_p, change_factor_x, k->state->data);
 
 
     struct Matrix minus_HPp = matrix_multiplication(minus_H, P_p, matrix2);
     struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp, matrix3);
-    struct Matrix P_updated = matrix_addition(P_p, negative_change_factor, matrix5);
-
-    // Deep Copy the new values so that we can safely leave x_updated and P_updated to go out of scope
-
-    //k->state = x_updated;
-    k->state->size = x_updated.size;
-    for (int i = 0; i < x_updated.size; i++){
-      k->state->data[i] = x_updated.data[i];
-    }
-    
-    //k->covariance = P_updated;
-    k->covariance->rows = P_updated.rows;
-    k->covariance->columns = P_updated.columns;
-    for (int i = 0; i < P_updated.rows; i++){
-      for (int j = 0; j < P_updated.columns; j++)
-        k->covariance->data[i][j] = P_updated.data[i][j];
-    }
+    struct Matrix P_updated = matrix_addition(P_p, negative_change_factor, k->covariance->data);
 }
 
