@@ -209,7 +209,7 @@ double dot_product(struct Vector A, struct Vector B) {
     double output = 0;
 
     for (int i = 0; i < A.size; ++i) {
-        output += A[i] * B[i];
+        output += A.data[i] * B.data[i];
     }
 
     return output;

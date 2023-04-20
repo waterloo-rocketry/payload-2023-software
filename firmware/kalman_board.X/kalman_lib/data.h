@@ -67,7 +67,8 @@ void update_rotation_filter(double new_time, double angular_position, double ang
   KalmanIterate(&lateralEntity, latPredParams, latCtrlParams, latSnsrReadings);
 }
 
-inline const double get_orientation() { return x_sl[0]; }
+// Throwing linking errors if we use inline
+const double get_orientation() { return x_sl[0]; }
 
 /* Kalman Parameters for 9x9 velocity filter */
 
@@ -153,8 +154,8 @@ double z_inp[6] = {0, 0, 0, 0, 0, 0};
 struct Vector z_vel = (struct Vector) {z_inp, 6};
 
 // Kalman Entity
-double x_sv[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-struct Vector x_vel = (struct Vector) {x_sv, 2};
+double x_cv[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+struct Vector x_vel = (struct Vector) {x_cv, 2};
 
 double p_cv0[9] = {1, 0, 0, 0, 0, 0, 0, 0, 0};
 double p_cv1[9] = {0, 1, 0, 0, 0, 0, 0, 0, 0};
@@ -199,4 +200,4 @@ double* get_velocity() {
   return velocity;
 }
 
-double *get_state() { return x_sv; }
+double *get_state() { return x_cv; }

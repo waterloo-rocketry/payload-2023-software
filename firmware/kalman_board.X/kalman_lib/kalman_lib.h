@@ -41,7 +41,7 @@ struct Matrix scalar_multiplication(struct Matrix A, double s, double* result_da
 struct Vector vector_multiplication(struct Matrix A, struct Vector B, double array[]);
 struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B, double* result_data[]);
 struct Matrix matrix_transposition(struct Matrix A, double* result_data[]);
-struct Vector cross_product(struct Vector A, struct Vector B, double** buf);
+struct Vector cross_product(struct Vector A, struct Vector B, double* buf);
 
 double dot_product(struct Vector A, struct Vector B);
 double norm(struct Vector A);

@@ -2,7 +2,7 @@
 #define REFERENCE_FRAME_ADJUST
 #include "kalman_lib.h"
 
-struct Matrix reference_frame_correction(struct Vector velocity, double angle);
+struct Matrix reference_frame_correction(struct Vector velocity, double angle, double ** buffer);
 
 #endif
 

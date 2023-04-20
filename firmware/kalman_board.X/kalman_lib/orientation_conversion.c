@@ -5,39 +5,39 @@
 struct Matrix reference_frame_correction(struct Vector velocity, double angle, double **buffer) {
     // we require velocity to be normalized.
     
-    if (velocity.data[0] == 0 && velocity.data[1] == 0 && velocity.data[2] == -1) {
-        return IDENTITY;
-    }
-    
-    /* Computing the rotation due to theta */
-    double rot0[3] = {cos(angle), -sin(double), 0};
-    double rot1[3] = {sin(angle), cos(double), 0};
-    double rot2[3] = {0, 0, 1};
-    double *rot[3] = {data0, data1, data2};
-    
-    struct Matrix Rot{rot, 3, 3};
-
-    /* Computing the rotation that alings the reference frame */
-    double cross_prod[3];
-    double z_dat[3] = {0, 0, 1};
-    struct Vector z_hat{z_dat, 3};
-
-    struct Vector v = cross_product(z_hat, velocity, cross_prod);
-    double c = dot_product(z_har, velocity);
-
-    // [v]_x
-    double align0[3] = {0, -v[2], v[1]};
-    double align1[3] = {v[2], 0, -v[0]};
-    double align2[3] = {-v[1], v[0], 0};
-    double *align[3] = {align0, align1, align2};
-    struct Matrix Align{align, 3, 3};
-
     // identity
     double iden0[3] = {1, 0, 0};
     double iden1[3] = {0, 1, 0};
     double iden2[3] = {0, 0, 1};
     double *iden[3] = {iden0, iden1, iden2};
-    struct Matrix Iden{iden, 3, 3};
+    struct Matrix Iden = {iden, 3, 3};
+
+    if (velocity.data[0] == 0 && velocity.data[1] == 0 && velocity.data[2] == -1) {
+        return Iden;
+    }
+    
+    /* Computing the rotation due to theta */
+    double rot0[3] = {cos(angle), -sin(angle), 0};
+    double rot1[3] = {sin(angle), cos(angle), 0};
+    double rot2[3] = {0, 0, 1};
+    double *rot[3] = {rot0, rot1, rot2};
+    
+    struct Matrix Rot = {rot, 3, 3};
+
+    /* Computing the rotation that alings the reference frame */
+    double cross_prod[3];
+    double z_dat[3] = {0, 0, 1};
+    struct Vector z_hat = {z_dat, 3};
+
+    struct Vector v = cross_product(z_hat, velocity, cross_prod);
+    double c = dot_product (z_hat, velocity);
+
+    // [v]_x
+    double align0[3] = {0, -v.data[2], v.data[1]};
+    double align1[3] = {v.data[2], 0, -v.data[0]};
+    double align2[3] = {-v.data[1], v.data[0], 0};
+    double *align[3] = {align0, align1, align2};
+    struct Matrix Align = {align, 3, 3};
 
     // buffers
     double b10[3];
