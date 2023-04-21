@@ -2,41 +2,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
-
-// MOVE THESE TO A NEW HEADER & 9x9s
-const int MATRIX_SIZE = 9;
-double vector1[9] = {0,0};
-double vector2[9] = {0,0};
-double vector3[9] = {0,0};
-double vector4[9] = {0,0};
-double vector5[9] = {0,0};
-double n1[9] = {0,0};
-double m1[9] = {0,0};
-double* matrix1[9] = {n1,m1};
-double n2[9] = {0,0};
-double m2[9] = {0,0};
-double* matrix2[9] = {n2,m2};
-double n3[9] = {0,0};
-double m3[9] = {0,0};
-double* matrix3[9] = {n3,m3};
-double n4[9] = {0,0};
-double m4[9] = {0,0};
-double* matrix4[9] = {n4,m4};
-double n5[9] = {0,0};
-double m5[9] = {0,0};
-double* matrix5[9] = {n5, m5};
-double n6[9] = {0,0};
-double m6[9] = {0,0};
-double* matrix6[9] = {n6,m6};
-double n7[9] = {0,0};
-double m7[9] = {0,0};
-double* matrix7[9] = {n7, m7};
-double n8[9] = {0,0};
-double m8[9] = {0,0};
-double* matrix8[9] = {n8,m8};
-double n9[9] = {0,0};
-double m9[9] = {0,0};
-double* matrix9[9] = {n9, m9};
+// Buffers defined here
+#include "buffer.h"
 
 //to run:   k.exe < inputfile.in > outputfile.out
 
