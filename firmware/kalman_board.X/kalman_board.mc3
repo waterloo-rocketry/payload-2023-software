@@ -2678,7 +2678,9 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="can2" name="CAN2_MASK0_ID"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;can2&gt;
   &lt;can2 dnOrder=&quot;0&quot; id=&quot;CAN2_MASK0_ID&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;/&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;0&quot;/&gt;
+    &lt;/Values&gt;
   &lt;/can2&gt;
 &lt;/can2&gt;
 </value>
@@ -2687,7 +2689,9 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="can2" name="CAN2_MASK0_ID_DECIMAL"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;can2&gt;
   &lt;can2 dnOrder=&quot;0&quot; id=&quot;CAN2_MASK0_ID_DECIMAL&quot;&gt;
-    &lt;Values dnOrder=&quot;0&quot;/&gt;
+    &lt;Values dnOrder=&quot;0&quot;&gt;
+      &lt;Dynamic dnOrder=&quot;0&quot; id=&quot;can2&quot; value=&quot;0&quot;/&gt;
+    &lt;/Values&gt;
   &lt;/can2&gt;
 &lt;/can2&gt;
 </value>
@@ -3011,8 +3015,7 @@
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="core" name="!@#harmonyUserData"/>
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;UserData&gt;
   &lt;UserData dnOrder=&quot;0&quot;&gt;
-    &lt;GraphSettings canvasHeight=&quot;88&quot; canvasWidth=&quot;637&quot; dnOrder=&quot;0&quot;/&gt;
-    &lt;ComponentGraph dnOrder=&quot;1&quot; id=&quot;__ROOTVIEW&quot;&gt;
+    &lt;ComponentGraph dnOrder=&quot;0&quot; id=&quot;__ROOTVIEW&quot;&gt;
       &lt;ElementPositions dnOrder=&quot;0&quot;&gt;
         &lt;ElementPosition dnOrder=&quot;0&quot; id=&quot;can2&quot; x=&quot;500&quot; y=&quot;20&quot;/&gt;
         &lt;ElementPosition dnOrder=&quot;1&quot; id=&quot;core&quot; x=&quot;234&quot; y=&quot;18&quot;/&gt;
@@ -3020,6 +3023,7 @@
         &lt;ElementPosition dnOrder=&quot;3&quot; id=&quot;uart6&quot; x=&quot;340&quot; y=&quot;20&quot;/&gt;
       &lt;/ElementPositions&gt;
     &lt;/ComponentGraph&gt;
+    &lt;GraphSettings canvasHeight=&quot;88&quot; canvasWidth=&quot;637&quot; dnOrder=&quot;1&quot;/&gt;
   &lt;/UserData&gt;
 &lt;/UserData&gt;
 </value>
@@ -5970,94 +5974,94 @@
 </value>
       </entry>
    </tokenMap>
-   <generatedFileHashHistoryMap class="java.util.TreeMap">
+   <generatedFileHashHistoryMap class="java.util.HashMap">
       <entry>
-         <file>..\src\config\default\definitions.h</file>
-         <hash>950b690ba4bfa9fa45f0a20b7e0dd6d2218a7ce87da82eafabb999a53aa71d4a</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\device.h</file>
-         <hash>10ec93c43a7b158a129ae05bd8f4a59ff5bcf3d0f3f062fdd64c374bc2d42099</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\exceptions.c</file>
-         <hash>f5ad435bbdb69c22d638ce10fd145b4cf0f12dc654d814a836293ca96fa992e5</hash>
+         <file>..\src\config\default\peripheral\can\plib_can2.h</file>
+         <hash>24ad82483a133ef03920e61b78caeb8649d8afcd2392633e1a5238b1f473d3e4</hash>
       </entry>
       <entry>
          <file>..\src\config\default\initialization.c</file>
          <hash>b451aededbf20461b6e01961b0710340995532c4f0b459fcb9056bb3b8b1ae45</hash>
       </entry>
       <entry>
-         <file>..\src\config\default\interrupts.c</file>
-         <hash>6b5cf935e3a1c780a98e3a832b6dea34a9e3596023bd7b1085f8786b62a7c8fa</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\interrupts.h</file>
-         <hash>91abdb8d191ae865fc6082f30783c3d6cca8aa8d5aca823a7fb2cc65e3a57d24</hash>
-      </entry>
-      <entry>
          <file>..\src\config\default\p32MZ2048EFM144.ld</file>
          <hash>845668fce00fbcce2a16b1f325acfa0a1cbca5916ae3207f3e77699d2ca6272f</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\can\plib_can2.c</file>
-         <hash>fe3e9a27eecb5ea41e8d2ee96caee2a5d8f48276f79498815d4a042e77b0cb82</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\can\plib_can2.h</file>
-         <hash>24ad82483a133ef03920e61b78caeb8649d8afcd2392633e1a5238b1f473d3e4</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\can\plib_can_common.h</file>
-         <hash>94676ea19a45f1291a1b6244d62d41e0d3ae1d8a21d8f3bd473527976392c694</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\clk\plib_clk.c</file>
-         <hash>d8c6ea7ec25bed8a90bc2226ebb38cbd36162a6c91071e7fcb454a183142ae51</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\clk\plib_clk.h</file>
-         <hash>aeb73e24e5a518024b1c3f7dce953a5cbacead08f55e80ae465fc8d2e522e477</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\evic\plib_evic.c</file>
-         <hash>b70d33596020a73d0e3164b20b1dea5bc8a67e758346fd3cfc33e6cc54da4063</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\evic\plib_evic.h</file>
-         <hash>8b7673c73f8d03aa75093884824ba31d5b4af59a88890b86d8fedf8fe2a0a3e5</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\gpio\plib_gpio.c</file>
-         <hash>82a6ba8c7054394717e2554cab96f6c3ffc50fa0ed2a422bef47aca2623f0f4e</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\gpio\plib_gpio.h</file>
-         <hash>7714966fa28b9767d5a81d9ab7a7fc124573e5808cf4a8b7577653cc49ff7bd3</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\uart\plib_uart6.c</file>
-         <hash>b0f282c8a1fa92440c1b4725bacbbddad7d879cb1a1048003b93b994cc7d8e01</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\uart\plib_uart6.h</file>
-         <hash>40d84d92442efda8eb207164d3e2c990de83709f7337846c1dee898f059a02de</hash>
-      </entry>
-      <entry>
-         <file>..\src\config\default\peripheral\uart\plib_uart_common.h</file>
-         <hash>c218c6173a59f6dff90ca776b4bf86cc2a856fa7e3272fb08dd42921ef56b24b</hash>
       </entry>
       <entry>
          <file>..\src\config\default\stdio\xc32_monitor.c</file>
          <hash>858f8710d4287200a5ee7f3b3ad7c24f505aed9c05c16956ab0ff9f7bb162a6a</hash>
       </entry>
       <entry>
+         <file>..\src\config\default\peripheral\evic\plib_evic.h</file>
+         <hash>8b7673c73f8d03aa75093884824ba31d5b4af59a88890b86d8fedf8fe2a0a3e5</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\exceptions.c</file>
+         <hash>f5ad435bbdb69c22d638ce10fd145b4cf0f12dc654d814a836293ca96fa992e5</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\evic\plib_evic.c</file>
+         <hash>b70d33596020a73d0e3164b20b1dea5bc8a67e758346fd3cfc33e6cc54da4063</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\can\plib_can2.c</file>
+         <hash>c9af0f1868506f95fb01db937f99e18172f7a180b32923e12ed640a59e60eef4</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\uart\plib_uart_common.h</file>
+         <hash>c218c6173a59f6dff90ca776b4bf86cc2a856fa7e3272fb08dd42921ef56b24b</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\uart\plib_uart6.h</file>
+         <hash>40d84d92442efda8eb207164d3e2c990de83709f7337846c1dee898f059a02de</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\definitions.h</file>
+         <hash>950b690ba4bfa9fa45f0a20b7e0dd6d2218a7ce87da82eafabb999a53aa71d4a</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\gpio\plib_gpio.h</file>
+         <hash>7714966fa28b9767d5a81d9ab7a7fc124573e5808cf4a8b7577653cc49ff7bd3</hash>
+      </entry>
+      <entry>
          <file>..\src\config\default\toolchain_specifics.h</file>
          <hash>84276afca06869943bba17727ff4f41fea61e4f81329ee20a333cafe39562a73</hash>
       </entry>
       <entry>
+         <file>..\src\config\default\interrupts.h</file>
+         <hash>91abdb8d191ae865fc6082f30783c3d6cca8aa8d5aca823a7fb2cc65e3a57d24</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\clk\plib_clk.c</file>
+         <hash>d8c6ea7ec25bed8a90bc2226ebb38cbd36162a6c91071e7fcb454a183142ae51</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\device.h</file>
+         <hash>10ec93c43a7b158a129ae05bd8f4a59ff5bcf3d0f3f062fdd64c374bc2d42099</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\uart\plib_uart6.c</file>
+         <hash>b0f282c8a1fa92440c1b4725bacbbddad7d879cb1a1048003b93b994cc7d8e01</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\gpio\plib_gpio.c</file>
+         <hash>82a6ba8c7054394717e2554cab96f6c3ffc50fa0ed2a422bef47aca2623f0f4e</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\clk\plib_clk.h</file>
+         <hash>aeb73e24e5a518024b1c3f7dce953a5cbacead08f55e80ae465fc8d2e522e477</hash>
+      </entry>
+      <entry>
          <file>..\src\main.c</file>
          <hash>d3c233d419e6304bfacbafc18cc68c0f5c26e365f23b20ea40ccfac458f664c5</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\peripheral\can\plib_can_common.h</file>
+         <hash>94676ea19a45f1291a1b6244d62d41e0d3ae1d8a21d8f3bd473527976392c694</hash>
+      </entry>
+      <entry>
+         <file>..\src\config\default\interrupts.c</file>
+         <hash>6b5cf935e3a1c780a98e3a832b6dea34a9e3596023bd7b1085f8786b62a7c8fa</hash>
       </entry>
    </generatedFileHashHistoryMap>
 </config>
