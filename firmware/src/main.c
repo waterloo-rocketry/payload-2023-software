@@ -49,46 +49,19 @@ int main ( void )
     /* Initialize all modules */
     SYS_Initialize ( NULL );
     UART6_Write(&buffer[0], sizeof(buffer));
-    //
     CAN2_CallbackRegister(can_msg_handle, (uintptr_t)NULL, 1);
-
-    //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
 
     //We live in clown world
     //Message "receive" function just binds memory to message location???
-
     CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type);
+    CAN2_Rx_Filter_Manual_Config(); //Fix Rx filter mask config cause the MCC function just does it wrong
     
-    //Do my own damn Rx filter configuration
-    C2FLTCON0bits.FLTEN0 = 0; //disable the filter to swap mask
-    C2RXF0bits.SID = 0x7C0; //we are going to try and ignore this with masking
-    C2RXF0bits.EXID = 0; //dont match extended ID messages
-    C2FLTCON0bits.MSEL0 = 1; //select Mask 0 as the mask for this filter
-    C2FLTCON0bits.FSEL0 = 1; //store messages in FIFO 1
-    
-    C2RXM0bits.SID = 0x0; //mask all filter bits - match any message
-    C2RXM0bits.MIDE = 1;
-            
-    C2FLTCON0bits.FLTEN0 = 1; //enable the filter again
-    
-    
-    //turn on LEDs
-    LATJbits.LATJ3 = 0;
-    LATJbits.LATJ7 = 0;
-    LATKbits.LATK7 = 0;
-    
+    //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
         
-        //if(CAN2_InterruptGet(1, CAN_FIFO_INTERRUPT_RXNEMPTYIF_MASK))
-        //{
-           //can_msg_handle((uintptr_t)NULL);
-            //CAN2_InterruptHandler();
-            //C2FIFOINT1CLR &= !0x1;
-            
-        //}
     }
 
     /* Execution should not come here during normal operation */
@@ -98,9 +71,8 @@ int main ( void )
 
 void can_msg_handle(uintptr_t context)
 {
-    
-
-    uint16_t msg_id = id & 0x7E0;
+    //might need to filter messages coming from the same board
+    uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
     switch (msg_id) {
         case MSG_LEDS_ON:
             LATJbits.LATJ3 = 0;
@@ -114,7 +86,7 @@ void can_msg_handle(uintptr_t context)
             break;
     }
     
-    CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type);
+    CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type); //this is cursed. Doing this prevents a runtime error. Do not ask me why we have to rebind the same memory addresses to the same locations
     
 }
 
