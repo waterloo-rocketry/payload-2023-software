@@ -183,7 +183,7 @@ void SYS_Initialize ( void* data )
 	UART6_Initialize();
 
 
-
+    
 
 
     EVIC_Initialize();
@@ -199,3 +199,18 @@ void SYS_Initialize ( void* data )
 /*******************************************************************************
  End of File
 */
+
+void CAN2_Rx_Filter_Manual_Config(void)
+{
+    //Do my own damn Rx filter configuration
+    C2FLTCON0bits.FLTEN0 = 0; //disable the filter to swap mask
+    C2RXF0bits.SID = 0x7C0; //we are going to try and ignore this with masking
+    C2RXF0bits.EXID = 0; //dont match extended ID messages
+    C2FLTCON0bits.MSEL0 = 1; //select Mask 0 as the mask for this filter
+    C2FLTCON0bits.FSEL0 = 1; //store messages in FIFO 1
+    
+    C2RXM0bits.SID = 0x0; //mask all filter bits - match any message
+    C2RXM0bits.MIDE = 1;
+            
+    C2FLTCON0bits.FLTEN0 = 1; //enable the filter again
+}
