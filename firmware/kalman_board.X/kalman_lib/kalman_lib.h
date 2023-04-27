@@ -2,7 +2,7 @@
 #define KALMAN_LIB
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 
 // Linear Algebra
 
@@ -16,24 +16,6 @@ struct Vector {
   double* data;
   int size;
 };
-
-// struct BufferStruct {
-//     double* vector1;
-//     double* vector2;
-//     double* vector3;
-//     double* vector4;
-//     double* vector5;
-//     double** matrix1;
-//     double** matrix2;
-//     double** matrix3;
-//     double** matrix4;
-//     double** matrix5;
-//     double** matrix6;
-//     double** matrix7;
-//     double** matrix8;
-//     double** matrix9;
-    
-// };
 
 
 struct Matrix matrix_addition(struct Matrix A, struct Matrix B, double* result_data[]);

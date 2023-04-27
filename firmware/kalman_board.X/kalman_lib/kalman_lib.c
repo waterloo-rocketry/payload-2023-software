@@ -227,11 +227,13 @@ void KalmanIterate(
     struct Vector minus_Hxp = vector_multiplication(minus_H, x_p, vector1);
     struct Vector z_minus_Hxp = vector_addition(*(snsrReading.sensor_reading), minus_Hxp, vector3);
     struct Vector change_factor_x = vector_multiplication(KalmanGain, z_minus_Hxp, vector4);
-    struct Vector x_updated = vector_addition(x_p, change_factor_x, k->state->data);
 
 
     struct Matrix minus_HPp = matrix_multiplication(minus_H, P_p, matrix2);
     struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp, matrix3);
-    struct Matrix P_updated = matrix_addition(P_p, negative_change_factor, k->covariance->data);
+    
+    // Set final values within the Kalman Entity
+    vector_addition(x_p, change_factor_x, k->state->data);
+    matrix_addition(P_p, negative_change_factor, k->covariance->data);
 }
 
