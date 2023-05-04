@@ -41,6 +41,10 @@ void can_msg_handle(uintptr_t context);
 uint8_t buffer[]= "Hello World!\r\n";
 uint8_t status[] = {0x00, 0xFF, 0xFF, 0x00};
 uint8_t can_rx_buffer[8];
+uint32_t id;
+uint8_t length;
+uint16_t timestamp;
+CAN_MSG_RX_ATTRIBUTE frame_type;
 
 double data[4][3] = {
     {0.01, -0.6603976331469725, 2.8701727385873443},
@@ -54,7 +58,6 @@ int main ( void )
     /* Initialize all modules */
     SYS_Initialize ( NULL );
     UART6_Write(&buffer[0], sizeof(buffer));
-    //
     CAN2_CallbackRegister(can_msg_handle, (uintptr_t)NULL, 1);
     CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     
@@ -70,6 +73,12 @@ int main ( void )
         UART6_Write(buffer, sizeof(buffer));
     }
 
+    //We live in clown world
+    //Message "receive" function just binds memory to message location???
+    CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type);
+    CAN2_Rx_Filter_Manual_Config(); //Fix Rx filter mask config cause the MCC function just does it wrong
+    
+    //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
         /* Maintain state machines of all polled MPLAB Harmony modules. */
@@ -84,13 +93,8 @@ int main ( void )
 
 void can_msg_handle(uintptr_t context)
 {
-    uint32_t id;
-    uint8_t length;
-    uint16_t timestamp;
-    CAN_MSG_RX_ATTRIBUTE frame_type;
-    CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 0, &frame_type);
-
-    uint16_t msg_id = id & 0x7E0;
+    //might need to filter messages coming from the same board
+    uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
     switch (msg_id) {
         case MSG_LEDS_ON:
             LATJbits.LATJ3 = 0;
@@ -103,6 +107,8 @@ void can_msg_handle(uintptr_t context)
             LATKbits.LATK7 = 1;
             break;
     }
+    
+    CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type); //this is cursed. Doing this prevents a runtime error. Do not ask me why we have to rebind the same memory addresses to the same locations
     
 }
 

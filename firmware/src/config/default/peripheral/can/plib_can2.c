@@ -132,7 +132,7 @@ void CAN2_Initialize(void)
     C2FIFOCON1 = (((1 - 1) << _C2FIFOCON1_FSIZE_POSITION) & _C2FIFOCON1_FSIZE_MASK);
 
     /* Configure CAN Filters */
-    C2RXF0 = (1984 & CAN_MSG_SID_MASK) << _C2RXF0_SID_POSITION;
+    C2RXF0 = (2016 & CAN_MSG_SID_MASK) << _C2RXF0_SID_POSITION;
     C2FLTCON0SET = ((0x1 << _C2FLTCON0_FSEL0_POSITION) & _C2FLTCON0_FSEL0_MASK)
                                                          | ((0x0 << _C2FLTCON0_MSEL0_POSITION) & _C2FLTCON0_MSEL0_MASK)| _C2FLTCON0_FLTEN0_MASK;
 
@@ -815,7 +815,7 @@ void CAN2_InterruptHandler(void)
                 if (((*(volatile uint32_t *)(&C2FIFOINT0 + (fifoNum * CAN_FIFO_OFFSET)) & _C2FIFOINT0_RXNEMPTYIF_MASK) != _C2FIFOINT0_RXNEMPTYIF_MASK) ||
                     (can2MsgIndex[fifoNum] == 0))
                 {
-                    *(volatile uint32_t *)(&C2FIFOINT0CLR + (fifoNum * CAN_FIFO_OFFSET)) = _C2FIFOINT0_RXNEMPTYIE_MASK;
+                    //*(volatile uint32_t *)(&C2FIFOINT0CLR + (fifoNum * CAN_FIFO_OFFSET)) = _C2FIFOINT0_RXNEMPTYIE_MASK;
                 }
             }
             IFS4CLR = _IFS4_CAN2IF_MASK;
