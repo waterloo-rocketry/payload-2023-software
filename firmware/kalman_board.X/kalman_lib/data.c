@@ -1,4 +1,4 @@
-#include "kalman_lib/kalman_lib.h"
+#include "data.h"
 
 /* Kalman Parameters for 2x2 lateral filter */
 
@@ -42,17 +42,34 @@ struct Matrix R_lat = (struct Matrix) {R_arrl, 2, 2};
 double z_inpl[2] = {0, 0};
 struct Vector z_lat = (struct Vector) {z_inpl, 2};
 
+// Kalman Entity
+double x_sl[2] = {0, 0};
+struct Vector x_lat = (struct Vector) {x_sl, 2};
+
+double p_cl0[2] = {1, 0};
+double p_cl1[2] = {0, 1};
+double *p_cl[2] = {p_cl0, p_cl1};
+struct Matrix p_lat = (struct Matrix) {p_cl, 2, 2};
+
 // Everything you will actually need for the lateral filter
-struct PredictionParameters latPredParams = (struct PredictionParameters) {F_lat, Q_lat};
-struct ControlParameters latCtrlParams = (struct ControlParameters) {G_lat, u_lat};
-struct SensorReading latSnsrReadings = (struct SensorReading) {H_lat, R_lat, z_lat};
+struct PredictionParameters latPredParams = (struct PredictionParameters) {&F_lat, &Q_lat};
+struct ControlParameters latCtrlParams = (struct ControlParameters) {&G_lat, &u_lat};
+struct SensorReading latSnsrReadings = (struct SensorReading) {&H_lat, &R_lat, &z_lat};
+
+struct KalmanEntity lateralEntity = (struct KalmanEntity) {&x_lat, &p_lat};
 
 void update_rotation_filter(double new_time, double angular_position, double angular_velocity){
   z_inpl[0] = angular_position;
   z_inpl[1] = angular_velocity;
   f0l[1] = new_time - time_lat;
   time_lat = new_time;
+
+  KalmanIterate(&lateralEntity, latPredParams, latCtrlParams, latSnsrReadings);
 }
+
+double get_orientation() { return x_sl[0]; }
+
+
 
 /* Kalman Parameters for 9x9 velocity filter */
 
@@ -86,7 +103,7 @@ double f5[9] = {0,0,0, 0,0,1, 0,0,0}; // a_y
 double f6[9] = {0,0,0,0,0,0, 1,0,0};  // z
 double f7[9] = {0,0,0,0,0,0, 0,1,0};  // v_z
 double f8[9] = {0,0,0,0,0,0, 0,0,1};  // a_z
-double* F_arr[2] = {f0, f1, f2, f3, f4, f5, f6, f7, f8};
+double* F_arr[9] = {f0, f1, f2, f3, f4, f5, f6, f7, f8};
 struct Matrix F_vel = (struct Matrix) {F_arr, 9, 9};
 
 // Control Model
@@ -137,10 +154,28 @@ struct Matrix R_vel = (struct Matrix) {R_arr, 6, 9};
 double z_inp[6] = {0, 0, 0, 0, 0, 0};
 struct Vector z_vel = (struct Vector) {z_inp, 6};
 
+// Kalman Entity
+double x_sv[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+struct Vector x_vel = (struct Vector) {x_sv, 2};
+
+double p_cv0[9] = {1, 0, 0, 0, 0, 0, 0, 0, 0};
+double p_cv1[9] = {0, 1, 0, 0, 0, 0, 0, 0, 0};
+double p_cv2[9] = {0, 0, 1, 0, 0, 0, 0, 0, 0};
+double p_cv3[9] = {0, 0, 0, 1, 0, 0, 0, 0, 0};
+double p_cv4[9] = {0, 0, 0, 0, 1, 0, 0, 0, 0};
+double p_cv5[9] = {0, 0, 0, 0, 0, 1, 0, 0, 0};
+double p_cv6[9] = {0, 0, 0, 0, 0, 0, 1, 0, 0};
+double p_cv7[9] = {0, 0, 0, 0, 0, 0, 0, 1, 0};
+double p_cv8[9] = {0, 0, 0, 0, 0, 0, 0, 0, 1};
+double *p_cv[9] = {p_cv0, p_cv1, p_cv2, p_cv3, p_cv4, p_cv5, p_cv6, p_cv7, p_cv8};
+struct Matrix p_vel = (struct Matrix) {p_cv, 9, 9};
+
 // Everything you will actually need for the velocity filter
-struct PredictionParameters latPredParams = (struct PredictionParameters) {F_vel, Q_vel};
-struct ControlParameters latCtrlParams = (struct ControlParameters) {G_vel, u_vel};
-struct SensorReading latSnsrReadings = (struct SensorReading) {H_vel, R_vel, z_vel};
+struct PredictionParameters velPredParams = (struct PredictionParameters) {&F_vel, &Q_vel};
+struct ControlParameters velCtrlParams = (struct ControlParameters) {&G_vel, &u_vel};
+struct SensorReading velSnsrReadings = (struct SensorReading) {&H_vel, &R_vel, &z_vel};
+
+struct KalmanEntity velocityEntity = (struct KalmanEntity) {&x_vel, &p_vel};
 
 void update_velocity_filter(double new_time, double x, double a_x, double y, double a_y, double z, double a_z) {
   z_inp[0] = x;
@@ -151,6 +186,19 @@ void update_velocity_filter(double new_time, double x, double a_x, double y, dou
   z_inp[5] = a_z;
   double delta_t = new_time - time_velocity;
   f0[1] = f1[2] = f3[1] = f4[2] = f6[1] = f7[1] = delta_t;
-  f0[2] = f3[2] = f6[2] = (delta_t ** 2)/2;
+  f0[2] = f3[2] = f6[2] = (delta_t * delta_t)/2;
   time_velocity = new_time;
+
+  KalmanIterate(&velocityEntity, velPredParams, velCtrlParams, velSnsrReadings);
 }
+
+double velocity[3];
+double* get_velocity() {
+  velocity[0] = x_sv[1];
+  velocity[1] = x_sv[4];
+  velocity[2] = x_sv[7];
+
+  return velocity;
+}
+
+double *get_state() { return x_sv; }
