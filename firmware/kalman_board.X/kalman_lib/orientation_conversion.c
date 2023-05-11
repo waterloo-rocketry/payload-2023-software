@@ -7,10 +7,6 @@ struct Matrix reference_frame_correction(struct Vector velocity, double angle, d
     buffer[0][0] = buffer[1][1] = buffer[2][2] = 1;
     buffer[0][1] = buffer[0][2] = buffer[1][0] = buffer[1][2] = buffer[2][0] = buffer[2][1] = 0;
 
-    if (velocity.data[0] == 0 && velocity.data[1] == 0 && velocity.data[2] == -1) {
-      return (struct Matrix) {buffer, 3, 3};
-    }
-    
     /* Computing the rotation due to theta */
     double rot0[3] = {cos(angle), -sin(angle), 0};
     double rot1[3] = {sin(angle), cos(angle), 0};
@@ -26,6 +22,11 @@ struct Matrix reference_frame_correction(struct Vector velocity, double angle, d
 
     struct Vector v = cross_product(z_hat, velocity, cross_prod);
     double c = dot_product (z_hat, velocity);
+
+    /* Check to make sure we won't be diving by 0 (we need to do 1/(1+c)) */
+    if (c == -1) {
+      return (struct Matrix) {buffer, 3, 3};
+    }
 
     // [v]_x
     double align0[3] = {0, -v.data[2], v.data[1]};
