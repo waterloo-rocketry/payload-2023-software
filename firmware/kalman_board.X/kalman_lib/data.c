@@ -141,14 +141,14 @@ struct Matrix H_vel = (struct Matrix) {H_arr, 6, 9};
 // Sensor Uncertainty
 // Covariances assumed to be 0, values
 // may be adjusted lated
-double r0[9] = {1,0,0,0,0,0,0,0,0};
-double r1[9] = {0,1,0,0,0,0,0,0,0};
-double r2[9] = {0,0,1,0,0,0,0,0,0};
-double r3[9] = {0,0,0,1,0,0,0,0,0};
-double r4[9] = {0,0,0,0,1,0,0,0,0};
-double r5[9] = {0,0,0,0,0,1,0,0,0};
+double r0[6] = {1,0,0,0,0,0};
+double r1[6] = {0,1,0,0,0,0};
+double r2[6] = {0,0,1,0,0,0};
+double r3[6] = {0,0,0,1,0,0};
+double r4[6] = {0,0,0,0,1,0};
+double r5[6] = {0,0,0,0,0,1};
 double* R_arr[6] = {r0, r1, r2, r3, r4, r5};
-struct Matrix R_vel = (struct Matrix) {R_arr, 6, 9};
+struct Matrix R_vel = (struct Matrix) {R_arr, 6, 6};
 
 // Sensor readings
 double z_inp[6] = {0, 0, 0, 0, 0, 0};
@@ -156,7 +156,7 @@ struct Vector z_vel = (struct Vector) {z_inp, 6};
 
 // Kalman Entity
 double x_sv[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-struct Vector x_vel = (struct Vector) {x_sv, 2};
+struct Vector x_vel = (struct Vector) {x_sv, 9};
 
 double p_cv0[9] = {1, 0, 0, 0, 0, 0, 0, 0, 0};
 double p_cv1[9] = {0, 1, 0, 0, 0, 0, 0, 0, 0};
@@ -185,8 +185,8 @@ void update_velocity_filter(double new_time, double x, double a_x, double y, dou
   z_inp[4] = z;
   z_inp[5] = a_z;
   double delta_t = new_time - time_velocity;
-  f0[1] = f1[2] = f3[1] = f4[2] = f6[1] = f7[1] = delta_t;
-  f0[2] = f3[2] = f6[2] = (delta_t * delta_t)/2;
+  f0[1] = f1[2] = f3[4] = f4[5] = f6[7] = f7[8] = delta_t;
+  f0[2] = f3[5] = f6[8] = (delta_t * delta_t)/2;
   time_velocity = new_time;
 
   KalmanIterate(&velocityEntity, velPredParams, velCtrlParams, velSnsrReadings);

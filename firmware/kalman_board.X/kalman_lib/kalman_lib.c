@@ -78,7 +78,7 @@ struct Matrix matrix_multiplication(struct Matrix A, struct Matrix B, double *re
         }
     }
     
-    struct Matrix result = {result_data, A.rows, A.columns};
+    struct Matrix result = {result_data, A.rows, B.columns};
     return result;
 }
 
@@ -89,7 +89,7 @@ struct Matrix matrix_transposition(struct Matrix A, double *result_data[]){
         }
     }
 
-    struct Matrix result = {result_data, A.rows, A.columns};
+    struct Matrix result = {result_data, A.columns, A.rows};
 
     return result;
 }
@@ -227,7 +227,6 @@ void KalmanIterate(
     struct Vector minus_Hxp = vector_multiplication(minus_H, x_p, vector1);
     struct Vector z_minus_Hxp = vector_addition(*(snsrReading.sensor_reading), minus_Hxp, vector3);
     struct Vector change_factor_x = vector_multiplication(KalmanGain, z_minus_Hxp, vector4);
-
 
     struct Matrix minus_HPp = matrix_multiplication(minus_H, P_p, matrix2);
     struct Matrix negative_change_factor = matrix_multiplication(KalmanGain, minus_HPp, matrix3);

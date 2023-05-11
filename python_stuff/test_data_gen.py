@@ -23,11 +23,8 @@ def conv(vec, vel, angle):
     v = np.cross(np.array([0, 0, 1]), vel)
     c = np.dot(np.array([0, 0, 1]), vel)
 
-
-
-    if vec = [0, 0, -1]:
+    if vec == [0, 0, -1]:
         return [-elem for elem in vec]
-
 
 
 for i in range(1000):
