@@ -11,20 +11,15 @@ class RigidBody:
   def __init__(self):
 
     # params
-    self.J = skew_symmetric(np.array([1, 1, 1])) # spherical cow energy
+    # self.J = skew_symmetric(np.array([1, 1, 1])) # spherical cow energy
+    self.J = np.identity(3)
 
     # states
     self.Delta = np.zeros(3)
 
     self.v = np.zeros(3)
 
-    # self.alpha = 0
-    # self.beta = 0
-    # self.gamma = 0
-    # self.Rx = np.zeros((3,3))
-    # self.Ry = np.zeros((3,3))
-    # self.Rz = np.zeros((3,3))
-    self.R = np.zeros((3,3))
+    self.R = np.identity(3)
 
     self.omega = np.zeros(3)
 
@@ -59,10 +54,10 @@ class Payload(RigidBody):
 
   def get_noisy_data(self):
     return (
-      self.Delta + np.normal(0, 1, 3),
-      self.v + np.normal(0, 1, 3),
-      self.R + np.normal(0, 1, 3),
-      self.omega + np.normal(0, 1, 3),
+      self.Delta + np.random.normal(0, 1, 3),
+      self.v + np.random.normal(0, 1, 3),
+      self.R + np.random.normal(0, 1, 3),
+      self.omega + np.random.normal(0, 1, 3),
     )
 
   def control(self, a, tau, dt=0.01):
