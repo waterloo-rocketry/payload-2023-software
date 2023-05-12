@@ -1,6 +1,15 @@
-# not a proper make file
-# but just use this command for the time being
-gcc kalman_test.c kalman_lib.c orientation_conversion.c data.c -lm -o k
+CC=gcc
+CFLAGS=-I. -Wall
 
-# Use this command for orientation_test.c
-gcc orientation_test.c kalman_lib.c orientation_conversion.c -lm -o o_test
+# running `make` will invoke the first recipe
+kalman_test: kalman_lib.o data.o
+	$(CC) $(CFLAGS) -o kalman_test kalman_test.c $^
+
+orientation_test: kalman_lib.o data.o
+	$(CC) $(CFLAGS) -o orientation_test orientation_test.c $^
+
+*.o: *.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+clean:
+	rm -f *.o kalman_test
