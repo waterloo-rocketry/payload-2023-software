@@ -12,6 +12,7 @@ double a_prev[3];
 double x_prev[3];
 
 double a_corr[3];
+double x_corr[3];
 double dat[9];
 
 int main() {
@@ -33,17 +34,16 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
               &new_time, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2,
               dat, dat+3, dat+6, dat+1, dat+4, dat+7, dat+2, dat+5, dat+8);
 
-        //update_rotation_filter(new_time, ap, av);
-        //struct Vector vel = (struct Vector) {get_velocity(), 3};
+        update_rotation_filter(new_time, ap, av);
+        struct Vector vel = (struct Vector) {get_velocity(), 3};
 
-        //printf("%f\n", get_orientation());
         // I take it that Angle States are x_sl and you meant to use get_orientation
-        //struct Matrix Conv = reference_frame_correction(vel, get_orientation(), Conv.data);
+        struct Matrix Conv = reference_frame_correction(vel, get_orientation(), conv);
             
-        //struct Vector A_corr = vector_multiplication(Conv, (struct Vector) {a_prev, 3} , a_corr);
-        //struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
+        struct Vector A_corr = vector_multiplication(Conv, (struct Vector) {a_prev, 3} , a_corr);
+        struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
 
-        update_velocity_filter(new_time, x_prev[0], a_prev[0], x_prev[1], a_prev[1], x_prev[2], a_prev[2]);
+        update_velocity_filter(new_time, x_corr[0], a_corr[0], x_corr[1], a_corr[1], x_corr[2], a_corr[2]);
 
         const double *state = get_state();
 
