@@ -3,6 +3,8 @@ import numpy as np
 # angular stuff
 theta = 0
 omega = 2
+a_pos = 0
+a_vel = 0
 
 ## Position stuff
 x = [0, 0, 0]
@@ -23,8 +25,33 @@ def conv(vec, vel, angle):
     v = np.cross(np.array([0, 0, 1]), vel)
     c = np.dot(np.array([0, 0, 1]), vel)
 
-    if vec == [0, 0, -1]:
-        return [-elem for elem in vec]
+    if c == -1:
+        return Rot
+
+    Align = np.array(
+        [
+            [0, -v[0], v[1]],
+            [v[0], 0, -v[0]],
+            [-v[1], v[0], 0]
+        ]
+    )
+
+    Iden = np.array(
+        [
+            [1,0,0],
+            [0,1,0],
+            [0,0,1]
+        ]
+    )
+
+    v_square = np.matmul(Align, Align)
+    v_square_scaled = v_square * (1/(1+c))
+    v_square_scaled_plus_v = v_square_scaled + Align
+    v_square_scaled_plus_v_plus_i = v_square_scaled_plus_v + Iden
+
+    result = np.matmul(v_square_scaled_plus_v_plus_i, Rot)
+
+    return result
 
 
 for i in range(1000):

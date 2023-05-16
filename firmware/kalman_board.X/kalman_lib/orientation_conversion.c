@@ -25,7 +25,8 @@ struct Matrix reference_frame_correction(struct Vector velocity, double angle, d
 
     /* Check to make sure we won't be diving by 0 (we need to do 1/(1+c)) */
     if (c == -1) {
-      return (struct Matrix) {buffer, 3, 3};
+      buffer = rot;
+      return Rot;
     }
 
     // [v]_x
