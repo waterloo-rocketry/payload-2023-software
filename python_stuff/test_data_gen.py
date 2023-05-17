@@ -51,7 +51,7 @@ def conv(vec, vel, angle):
 
     result = np.matmul(v_square_scaled_plus_v_plus_i, Rot)
 
-    return result
+    return result # *vec
 
 
 for i in range(1000):
