@@ -33,6 +33,7 @@ struct Matrix matrix_inverse(struct Matrix matrix, double* inverse_data[]);
 
 
 void print_matrix(struct Matrix A);
+void print_vector(struct Vector A);
 
 // Kalman Library Functions
 

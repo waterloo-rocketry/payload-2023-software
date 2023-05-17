@@ -187,6 +187,22 @@ double norm(struct Vector A) {
     return sqrt(dot_product(A, A));
 }
 
+void print_matrix(struct Matrix A) {
+    for (int i = 0; i < A.rows; i++) {
+        for (int j = 0; j < A.columns; j++) {
+            printf("%lf\t", A.data[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void print_vector(struct Vector B) {
+    for (int i = 0; i < B.size; i++) {
+        printf("%lf\t", B.data[i]);
+    }
+    printf("\n");
+}
+
 // Kalman Stuff
 
 void KalmanIterate(
