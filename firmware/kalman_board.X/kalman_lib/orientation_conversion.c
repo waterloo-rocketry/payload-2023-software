@@ -4,8 +4,7 @@
 
 struct Matrix reference_frame_correction(struct Vector velocity, double angle, double **buffer) {
     // we require velocity to be normalized.
-    double magnitude = sqrt(velocity.data[0]*velocity.data[0] + velocity.data[1]*velocity.data[1]
-                            + velocity.data[2]*velocity.data[2]);
+    double magnitude = norm(velocity);
     for (int i = 0; i < 3; i++) {
       velocity.data[i] = velocity.data[i]/magnitude;
     }

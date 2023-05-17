@@ -4,7 +4,10 @@
 #include <stdio.h>
 
 int main() {
-    double data[3] = {1.0, 1.0, 1.0};
+    double pos[3] = {5.0, 5.0, 5.0};
+    struct Vector position = {pos, 3};
+
+    double data[3] = {0.0, 0.0, 1.0};
     struct Vector velocity = {data, 3};
 
     double angle = M_PI;
@@ -15,13 +18,16 @@ int main() {
     double *conv[3] = {conv0, conv1, conv2};
 
     struct Matrix Conv = reference_frame_correction(velocity, angle, conv);
+    printf("Rotation Matrix:\n");
+    print_matrix(Conv);
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            printf("%f\t", Conv.data[i][j]);
-        }
-        printf("\n");
-    }
+    double result[3];
+    struct Vector Result = vector_multiplication(Conv, position, result);
+
+    printf("\nOriginal Position:\n");
+    print_vector(position);
+    printf("\nEstimated Position: \n");
+    print_vector(Result);
 
     return 0;
 }
