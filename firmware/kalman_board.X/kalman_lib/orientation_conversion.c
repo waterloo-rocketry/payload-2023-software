@@ -4,8 +4,11 @@
 
 struct Matrix reference_frame_correction(struct Vector velocity, double angle, double **buffer) {
     // we require velocity to be normalized.
-    buffer[0][0] = buffer[1][1] = buffer[2][2] = 1;
-    buffer[0][1] = buffer[0][2] = buffer[1][0] = buffer[1][2] = buffer[2][0] = buffer[2][1] = 0;
+    double magnitude = sqrt(velocity.data[0]*velocity.data[0] + velocity.data[1]*velocity.data[1]
+                            + velocity.data[2]*velocity.data[2]);
+    for (int i = 0; i < 3; i++) {
+      velocity.data[i] = velocity.data[i]/magnitude;
+    }
 
     /* Computing the rotation due to theta */
     double rot0[3] = {cos(angle), -sin(angle), 0};
@@ -25,8 +28,15 @@ struct Matrix reference_frame_correction(struct Vector velocity, double angle, d
 
     /* Check to make sure we won't be diving by 0 (we need to do 1/(1+c)) */
     if (c == -1) {
-      buffer = rot;
-      return Rot;
+      
+      // Copy rotation matrix into buffer
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+          buffer[i][j] = rot[i][j];
+        }
+      }
+
+      return (struct Matrix) {buffer, 3, 3};
     }
 
     // [v]_x
