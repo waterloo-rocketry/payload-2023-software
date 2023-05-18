@@ -3,7 +3,14 @@
 #include <math.h>
 
 struct Matrix reference_frame_correction(struct Vector velocity, double angle, double **buffer) {
-    // we require velocity to be normalized.
+    // We require velocity to be normalized
+    // Check to make sure we won't divide by 0
+    if (velocity.data[0] == 0.0 && velocity.data[1] == 0.0 && velocity.data[2] == 0.0) {
+      velocity.data[0] = 0.0;
+      velocity.data[1] = 0.0;
+      velocity.data[2] = 1.0;
+    }
+
     double magnitude = norm(velocity);
     for (int i = 0; i < 3; i++) {
       velocity.data[i] = velocity.data[i]/magnitude;
