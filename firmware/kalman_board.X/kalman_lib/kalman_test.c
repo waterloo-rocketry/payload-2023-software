@@ -30,8 +30,8 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
 
         // Pull 'sensor readings' from files
         double new_time, ap, av;
-        scanf("%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
-              &new_time, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2,
+        scanf("%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+              &new_time, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2, &ap, &av,
               dat, dat+3, dat+6, dat+1, dat+4, dat+7, dat+2, dat+5, dat+8);
 
         update_rotation_filter(new_time, ap, av);

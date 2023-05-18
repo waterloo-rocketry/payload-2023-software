@@ -7,10 +7,10 @@ int main() {
     double pos[3] = {5.0, 5.0, 5.0};
     struct Vector position = {pos, 3};
 
-    double data[3] = {0.0, 0.0, 1.0};
+    double data[3] = {0.0, 0.0, 0.000001};
     struct Vector velocity = {data, 3};
 
-    double angle = M_PI;
+    double angle = 0; // M_PI;
 
     double conv0[3];
     double conv1[3];

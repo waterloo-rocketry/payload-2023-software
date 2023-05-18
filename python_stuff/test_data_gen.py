@@ -56,11 +56,9 @@ for i in range(1000):
     t = 0.01 * (1 + i)
 
     X = [x[0] + t*v[0] + t*t*a[0]/2, x[1] + t*v[1] + t*t*a[1]/2, x[2] + t*v[2] + t*t*a[2]/2]
-    # theta = theta + n()
-    # omega = omega + n()
     x_rot = conv(X, v, theta) + n()
     a_rot = conv(a, v, theta) + n()
 
-    sensor_reads = f'{x_rot[0]},{x_rot[1]},{x_rot[2]},{a_rot[0]},{a_rot[1]},{a_rot[2]}'
+    sensor_reads = f'{x_rot[0]},{x_rot[1]},{x_rot[2]},{a_rot[0]},{a_rot[1]},{a_rot[2]},{theta+t*omega+n()},{omega+n()}'
     true_values = f'{x[0] + t*v[0] + t*t*a[0]/2},{x[1] + t*v[1] + t*t*a[1]/2},{x[2] + t*v[2] + t*t*a[2]/2},{v[0] + t*a[0]},{v[1] + t*a[1]},{v[2] + t*a[2]},{a[0]},{a[1]},{a[2]}'
     print(f'{t},{sensor_reads},{true_values}')

@@ -6,9 +6,9 @@ struct Matrix reference_frame_correction(struct Vector velocity, double angle, d
     // We require velocity to be normalized
     // Check to make sure we won't divide by 0
     if (velocity.data[0] == 0.0 && velocity.data[1] == 0.0 && velocity.data[2] == 0.0) {
-      velocity.data[0] = 0.0;
-      velocity.data[1] = 0.0;
-      velocity.data[2] = 1.0;
+      velocity.data[0] = 300;
+      velocity.data[1] = 200;
+      velocity.data[2] = -100;
     }
 
     double magnitude = norm(velocity);
