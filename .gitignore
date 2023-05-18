@@ -1,6 +1,10 @@
 firmware/kalman_board.X/.generated_files/*
 *.bkp
 venv/
+k
+test.in
+out.out
+out.csv
 
 # MPLAB X
 
