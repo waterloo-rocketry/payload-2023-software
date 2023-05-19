@@ -3,8 +3,10 @@ firmware/kalman_board.X/.generated_files/*
 venv/
 k
 test.in
+test.csv
 out.out
 out.csv
+o_test
 
 # MPLAB X
 
