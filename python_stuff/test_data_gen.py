@@ -7,12 +7,16 @@ omega = 2
 ## Position stuff
 x = [0, 0, 0]
 v = [300, 200, 100]
-a = [-5, -10, -20]
+a = [5, 10, 20]
 
 def n():
     return np.random.normal(0, 1, 1)[0]
 
 def conv(vec, vel, angle):
+    norm = np.linalg.norm(vel)
+    for i in range(3):
+        vel[i] /= norm
+    
     Rot = np.array(
             [
             [np.cos(angle), -np.sin(angle), 0],
@@ -28,8 +32,8 @@ def conv(vec, vel, angle):
 
     Align = np.array(
         [
-            [0, -v[0], v[1]],
-            [v[0], 0, -v[0]],
+            [0, -v[2], v[1]],
+            [v[2], 0, -v[0]],
             [-v[1], v[0], 0]
         ]
     )
