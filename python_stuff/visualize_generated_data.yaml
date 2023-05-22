@@ -1,0 +1,46 @@
+# all time in seconds
+
+inputs:
+
+  duration: 10
+  dt: 0.1
+
+  # missing a or tau is implicitly [0,0,0]
+  events:
+  -
+    t: 1
+    a: [5,0,0]
+  -
+    t: 3
+  -
+    t: 5
+    tau: [1,0,0]
+  -
+    t: 7
+
+outputs:
+- t
+- x
+- y
+- z
+- noisy_x
+- noisy_y
+- noisy_z
+- vx
+- vy
+- vz
+- ax
+- ay
+- az
+- noisy_ax
+- noisy_ay
+- noisy_az
+- omega_x
+- omega_y
+- omega_z
+- noisy_omega_x
+- noisy_omega_y
+- noisy_omega_z
+- tau_x
+- tau_y
+- tau_z
