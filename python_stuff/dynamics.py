@@ -37,6 +37,7 @@ class RigidBody:
     # calculate the derivatives
     self.omega_dot = np.linalg.inv(self.J) @ (self.tau - np.cross(self.omega, self.J @ self.omega))
 
+    # TODO: add gravity when above the ground
     self.v_dot = skew_symmetric(self.omega) @ self.v + self.a
 
     self.R_dot = self.R @ skew_symmetric(self.omega)
@@ -53,6 +54,7 @@ class Payload(RigidBody):
     super().__init__()
 
   def get_noisy_data(self):
+    # TODO: add std dev to config
     return (
       self.Delta + np.random.normal(0, 1, 3),
       self.v + np.random.normal(0, 1, 3),
@@ -60,6 +62,6 @@ class Payload(RigidBody):
       self.omega + np.random.normal(0, 1, 3),
     )
 
-  def control(self, a, tau, dt=0.01):
+  def control(self, a, tau):
     self.a = a
     self.tau = tau
