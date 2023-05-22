@@ -20,12 +20,12 @@ inputs:
 
 outputs:
 - t
-- noisy_x
-- noisy_y
-- noisy_z
-- noisy_ax
-- noisy_ay
-- noisy_az
-- noisy_omega_x
-- noisy_omega_y
-- noisy_omega_z
+- sensor_x
+- sensor_y
+- sensor_z
+- sensor_ax
+- sensor_ay
+- sensor_az
+- sensor_omega_x
+- sensor_omega_y
+- sensor_omega_z

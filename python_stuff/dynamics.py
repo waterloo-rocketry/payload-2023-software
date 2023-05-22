@@ -15,13 +15,13 @@ class RigidBody:
     self.J = np.identity(3)
 
     # states
-    self.Delta = np.zeros(3)
+    self.Delta = np.zeros(3) # global frame
 
-    self.v = np.zeros(3)
+    self.v = np.zeros(3) # body frame
 
-    self.R = np.identity(3)
+    self.R = np.identity(3) # body -> global
 
-    self.omega = np.zeros(3)
+    self.omega = np.zeros(3) # body frame
 
     # state derivatives
     self.Delta_dot = np.zeros(3)
@@ -30,8 +30,8 @@ class RigidBody:
     self.omega_dot = np.zeros(3)
 
     # inputs
-    self.tau = np.zeros(3)
-    self.a = np.zeros(3)
+    self.tau = np.zeros(3) # body frame
+    self.a = np.zeros(3) # body frame
 
   def update(self, dt=0.01):
     # calculate the derivatives
@@ -56,10 +56,9 @@ class Payload(RigidBody):
   def get_noisy_data(self):
     # TODO: add std dev to config
     return (
-      self.Delta + np.random.normal(0, 1, 3),
-      self.v + np.random.normal(0, 1, 3),
-      self.R + np.random.normal(0, 1, 3),
-      self.omega + np.random.normal(0, 1, 3),
+      self.Delta + np.random.normal(0, 0.5, 3),
+      self.a + np.random.normal(0, 0.5, 3), #TODO: add gravity
+      self.omega + np.random.normal(0, 0.5, 3),
     )
 
   def control(self, a, tau):
