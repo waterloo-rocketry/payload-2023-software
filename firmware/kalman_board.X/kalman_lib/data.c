@@ -68,6 +68,7 @@ void update_rotation_filter(double new_time, double angular_position, double ang
 }
 
 double get_orientation() { return x_sl[0]; }
+double get_angular_velocity() {return x_sl[1]; }
 
 
 
