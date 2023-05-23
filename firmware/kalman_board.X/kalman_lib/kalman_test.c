@@ -31,10 +31,13 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
         // Pull 'sensor readings' from files
         double new_time, ap, av;
         scanf("%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
-              &new_time, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2, &ap, &av,
-              dat, dat+3, dat+6, dat+1, dat+4, dat+7, dat+2, dat+5, dat+8);
+              &new_time, &ap, &av, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2,
+              dat, dat+1, dat+2, dat+3, dat+4, dat+5, dat+6, dat+7, dat+8);
 
         update_rotation_filter(new_time, ap, av);
+        double vel_true_dat[3] = {dat[3], dat[4], dat[5]};
+        struct Vector vel_true = (struct Vector) {vel_true_dat, 3};
+
         struct Vector vel = (struct Vector) {get_velocity(), 3};
 
         // I take it that Angle States are x_sl and you meant to use get_orientation
@@ -47,9 +50,15 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
 
         const double *state = get_state();
 
+        printf("%f,%f,%f,%f,%f,%f\n", dat[0], dat[1], dat[2], state[0], state[3], state[6]);
+
+        /*
+
         printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", state[0], state[1], state[2], state[3], state[4], state[5], state[6], state[7], state[8],
                dat[0], dat[1], dat[2], dat[3], dat[4], dat[5], dat[6], dat[7], dat[8],
                x_prev[0], x_prev[1], x_prev[2], a_prev[0], a_prev[1], a_prev[2]);
+
+        */
     }
     
 }
