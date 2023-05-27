@@ -42,7 +42,6 @@ void can_msg_handle(uintptr_t context);
 uint8_t buffer[]= "Hello World!\r\n";
 uint8_t status[] = {0x00, 0xFF, 0xFF, 0x00};
 uint8_t can_rx_buffer[8];
-uint32_t id;
 uint8_t length;
 uint16_t timestamp;
 CAN_MSG_RX_ATTRIBUTE frame_type;
@@ -56,12 +55,16 @@ int last_hours = 0;
 int last_minutes = 0;
 int last_seconds = 0;
 int last_deciseconds = 0;
+
+double
+
 double GPS_time = -1; // Keeps track of last MSG_GPS_TIMESTAMP
-double GPS_data[3] = {0,0,0}; // Lat Lon Alt
+double GPS_data_initial[3] = {-1, -1, -1};
+double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
 u_int8_t GPS_valid[3] = {0,0,0};
 double IMU_time = -1;
-double IMU_data[6] = {0,0,0,0,0,0}; // Accel XYZ & Gyro XYZ
-u_int8_t IMU_count[6] = {0,0,0,0,0,0};
+double IMU_data[9] = {0,0,0,0,0,0,0,0,0}; // Accel XYZ & Gyro XYZ & Mag XYZ???
+u_int8_t IMU_count[9] = {0,0,0,0,0,0,0,0,0};
 
 double data[4][3] = {
     {0.01, -0.6603976331469725, 2.8701727385873443},
@@ -102,13 +105,6 @@ int main ( void )
         SYS_Tasks ( );
         //for(int i = 0; i < 100000; ++i);
         
-        // TBD: Poll IMU
-        IMU_data[0] += data; IMU_count[0]++;
-        IMU_data[1] += data; IMU_count[1]++;
-        IMU_data[2] += data; IMU_count[2]++;
-        IMU_data[3] += data; IMU_count[3]++;
-        IMU_data[4] += data; IMU_count[4]++;
-        IMU_data[5] += data; IMU_count[5]++;
 
         // If we have GPS do KalmanIterate
         if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
@@ -119,13 +115,17 @@ int main ( void )
             IMU_data[3] /= IMU_count[3];
             IMU_data[4] /= IMU_count[4];
             IMU_data[5] /= IMU_count[5];
+            IMU_data[6] /= IMU_count[6];
+            IMU_data[7] /= IMU_count[7];
+            IMU_data[8] /= IMU_count[8];
 
             GPS_data[0] /= GPS_valid[0];
             GPS_data[1] /= GPS_valid[1];
             GPS_data[2] /= GPS_valid[2];
 
-            // TBD: Do math to get ap and av
-
+            // TBD: Do math to get ap
+            // av is the Gyro Reading on z
+            double av = IMU_data[5];
             
             // TBD: Do Kalman with data from arrays
             struct Vector vel = (struct Vector) {get_velocity(), 3};
@@ -139,17 +139,23 @@ int main ( void )
 
             const double *state = get_state();
             
-            // Clear valid bits
+            // Clear valid bits and zero the data if needed
             IMU_count[0] = 0;
             IMU_count[1] = 0;
             IMU_count[2] = 0;
             IMU_count[3] = 0;
             IMU_count[4] = 0;
             IMU_count[5] = 0;
+            IMU_count[6] = 0;
+            IMU_count[7] = 0;
+            IMU_count[8] = 0;
 
             GPS_valid[0] = 0;
             GPS_valid[1] = 0;
             GPS_valid[2] = 0;
+            GPS_data[0] = 0;
+            GPS_data[1] = 0;
+            GPS_data[2] = 0;
         }
     }
 
@@ -164,9 +170,6 @@ void can_msg_handle(uintptr_t context)
     // Pretend to receive a CAN message
     can_msg_t message;
 
-    uint16_t id = message.sid;
-    u_int8_t datalen = message.datalen; // It's probably safe to just grab all 8 bytes and not use it tbh
-    u_int8_t data[8] = message.data;
 
     //might need to filter messages coming from the same board
     uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
@@ -188,33 +191,53 @@ void can_msg_handle(uintptr_t context)
             }
             else{
                 // Calculate Time
-                double timediff = ((data[3] - last_hours) * 60 * 60 * 60 * 10 + (data[4] - last_minutes) * 60 * 60 * 10 + (data[5] - last_seconds) * 10 + (data[6] - last_deciseconds)) * 0.1;
+                double timediff = ((can_rx_buffer[3] - last_hours) * 60 * 60 * 60 * 10 + (can_rx_buffer[4] - last_minutes) * 60 * 60 * 10 + (can_rx_buffer[5] - last_seconds) * 10 + (can_rx_buffer[6] - last_deciseconds)) * 0.1;
                 GPS_time += timediff;
             }
-            last_hours = data[3];
-            last_minutes = data[4];
-            last_seconds = data[5];
-            last_deciseconds = data[6];
+            last_hours = can_rx_buffer[3];
+            last_minutes = can_rx_buffer[4];
+            last_seconds = can_rx_buffer[5];
+            last_deciseconds = can_rx_buffer[6];
             break;
         case MSG_GPS_LAT:
-            // TBD: do_parse
-            // Dummy Code
-            GPS_data[0] = data;
+            // deciminute is 4 digits after minute
+            // current data reading
+            double lat = can_rx_buffer[3] * 60 + can_rx_buffer[4];
+            u_int16_t dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
+            lat += dmin*0.001;
+
+            GPS_data[0] += lat;
+
+            // Record initial
+            if (GPS_data_initial[0] == -1){
+                GPS_data_initial[0] = GPS_data[0];
+            }
             GPS_valid[0] ++;
             break;
         case MSG_GPS_LON:
-            // TBD: do_parse
-            // Dummy Code
-            GPS_data[1] = data;
+            // deciminute is 4 digits after minute
+            // current data reading
+            double lon = can_rx_buffer[3] * 60 + can_rx_buffer[4];
+            u_int16_t dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
+            lon += dmin*0.001;
+
+            GPS_data[1] += lon;
+
+            // Record initial
+            if (GPS_data_initial[1] == -1){
+                GPS_data_initial[1] = GPS_data[0];
+            }
             GPS_valid[1] ++;
             break;
         case MSG_GPS_ALT:
-            // TBD: do_parse
-            // Dummy Code
-            GPS_data[2] = data;
+            u_int16_t alt = (((uint16_t)can_rx_buffer[3] << 8 | (uint16_t)can_rx_buffer[4]));
+            double altitude = alt + 0.01*(can_rx_buffer[6]);
+            if (GPS_data_initial[2] == -1){
+                GPS_data_initial[2] = altitude;
+            }
+            GPS_data[2] += altitude - GPS_data_initial[2];
             GPS_valid[2] ++;
             break;
-
     }
     
     CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type); //this is cursed. Doing this prevents a runtime error. Do not ask me why we have to rebind the same memory addresses to the same locations
