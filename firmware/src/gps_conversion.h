@@ -7,7 +7,7 @@ double to_radians(double angle) {
     return angle * 3.14159265 / 180.0;
 }
 
-void gps_conversion(double lat1, double long1, double lat2, double long2, double& resX, double& resY) {
+void gps_conversion(double lat1, double long1, double lat2, double long2, double* resX, double* resY) {
     // Delta x and y
     double delta_y = lat2 - lat1;
     double delta_x = long2 - long1;
@@ -21,8 +21,8 @@ void gps_conversion(double lat1, double long1, double lat2, double long2, double
     double x_disp = delta_x * km_per_long;
 
     // Return x and y displacement in the referenced values
-    resX = x_disp*1000;
-    resY = y_disp*1000;
+    *resX = x_disp*1000;
+    *resY = y_disp*1000;
 }
 
 #endif

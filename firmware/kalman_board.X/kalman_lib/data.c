@@ -27,10 +27,9 @@ double u_inpl[1] = {0};
 struct Vector u_lat = (struct Vector) {u_inpl, 1};
 
 // Observation Matrix
-double h0l[2] = {1,0};
 double h1l[2] = {0,1};
-double* H_arrl[2] = {h0l, h1l};
-struct Matrix H_lat = (struct Matrix) {H_arrl, 2, 2};
+double* H_arrl[1] = {h1l};
+struct Matrix H_lat = (struct Matrix) {H_arrl, 1, 2};
 
 // Sensor uncertainty
 double r0l[2] = {1,0};
@@ -39,8 +38,8 @@ double* R_arrl[2] = {r0l, r1l};
 struct Matrix R_lat = (struct Matrix) {R_arrl, 2, 2};
 
 // Sensor readings
-double z_inpl[2] = {0, 0};
-struct Vector z_lat = (struct Vector) {z_inpl, 2};
+double z_inpl[1] = {0};
+struct Vector z_lat = (struct Vector) {z_inpl, 1};
 
 // Kalman Entity
 double x_sl[2] = {0, 0};
@@ -58,8 +57,7 @@ struct SensorReading latSnsrReadings = (struct SensorReading) {&H_lat, &R_lat, &
 
 struct KalmanEntity lateralEntity = (struct KalmanEntity) {&x_lat, &p_lat};
 
-void update_rotation_filter(double new_time, double angular_position, double angular_velocity){
-  z_inpl[0] = angular_position;
+void update_rotation_filter(double new_time, double angular_velocity){
   z_inpl[1] = angular_velocity;
   f0l[1] = new_time - time_lat;
   time_lat = new_time;

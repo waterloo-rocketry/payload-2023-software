@@ -31,6 +31,7 @@
 //#include "../kalman_board.X/kalman_lib/kalman_lib.h"
 #include "../kalman_board.X/kalman_lib/data.h"
 #include "gps_conversion.h"
+#include "../kalman_board.X/kalman_lib/orientation_conversion.h"
 
 
 // *****************************************************************************
@@ -45,6 +46,7 @@ uint8_t status[] = {0x00, 0xFF, 0xFF, 0x00};
 uint8_t can_rx_buffer[8];
 uint8_t length;
 uint16_t timestamp;
+uint32_t id;
 CAN_MSG_RX_ATTRIBUTE frame_type;
 
 
@@ -64,6 +66,13 @@ double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
 u_int8_t GPS_valid[3] = {0,0,0};
 double IMU_data[3] = {-1,-1,-1}; // Accel XYZ 
 u_int8_t IMU_count[3] = {0,0,0};
+
+double conv0[3];
+double conv1[3];
+double conv2[3];
+double *conv[3] = {conv0, conv1, conv2};
+
+double a_corr[3];
 
 #define fifoNum 0
 #define msgAttr 0
@@ -153,9 +162,12 @@ int main ( void )
             //struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
 
             // GPS Conv (coords to meters)
+            double gpsX = 0;
+            double gpsY = 0;
+            gps_conversion(GPS_data_initial[0], GPS_data_initial[1], GPS_data[0], GPS_data[1], &gpsX, &gpsY);
 
             // timestamp, GPS_value[0], acc[0] ......
-            update_velocity_filter(GPS_time, x_prev, a_corr[0], x_corr[1], a_corr[1], GPS_data[2], a_corr[2]);
+            update_velocity_filter(GPS_time, gpsX, A_corr.data[0], gpsY, A_corr.data[1], GPS_data[2], A_corr.data[2]);
 
             const double *state = get_state();
 
@@ -193,12 +205,10 @@ int main ( void )
 void can_msg_handle(uintptr_t context)
 {
 
-    // Pretend to receive a CAN message
-    can_msg_t message;
-
-
     //might need to filter messages coming from the same board
     uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
+    double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang;
+    uint16_t alt, xa, ya, za, dmin, zg;
     switch (msg_id) {
         case MSG_LEDS_ON:
             LATJbits.LATJ3 = 0;
@@ -226,11 +236,11 @@ void can_msg_handle(uintptr_t context)
             last_seconds = can_rx_buffer[5];
             last_deciseconds = can_rx_buffer[6];
             break;
-        case MSG_GPS_LAT:
+        case MSG_GPS_LATITUDE:
             // deciminute is 4 digits after minute
             // current data reading
-            double lat = can_rx_buffer[3] * 60 + can_rx_buffer[4];
-            u_int16_t dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
+            lat = can_rx_buffer[3] * 60 + can_rx_buffer[4];
+            dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
             lat += dmin*0.001;
 
             GPS_data[0] = lat;
@@ -241,11 +251,11 @@ void can_msg_handle(uintptr_t context)
             }
             GPS_valid[0] = 1;
             break;
-        case MSG_GPS_LON:
+        case MSG_GPS_LONGITUDE:
             // deciminute is 4 digits after minute
             // current data reading
-            double lon = can_rx_buffer[3] * 60 + can_rx_buffer[4];
-            u_int16_t dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
+            lon = can_rx_buffer[3] * 60 + can_rx_buffer[4];
+            dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
             lon += dmin*0.001;
 
             GPS_data[1] = lon;
@@ -256,9 +266,9 @@ void can_msg_handle(uintptr_t context)
             }
             GPS_valid[1] = 1;
             break;
-        case MSG_GPS_ALT:
-            u_int16_t alt = (((uint16_t)can_rx_buffer[3] << 8 | (uint16_t)can_rx_buffer[4]));
-            double altitude = alt + 0.01*(can_rx_buffer[6]);
+        case MSG_GPS_ALTITUDE:
+            alt = (((uint16_t)can_rx_buffer[3] << 8 | (uint16_t)can_rx_buffer[4]));
+            altitude = alt + 0.01*(can_rx_buffer[6]);
             if (GPS_data_initial[2] == -1){
                 GPS_data_initial[2] = altitude;
             }
@@ -268,14 +278,14 @@ void can_msg_handle(uintptr_t context)
 
         // ICM-20948
         // g
-        case SENSOR_ACC:
+        case MSG_SENSOR_ACC:
             // To m/s^2
-            u_int16_t xa = (((uint16_t)can_rx_buffer[2] << 8 | (uint16_t)can_rx_buffer[3]));
-            u_int16_t ya = (((uint16_t)can_rx_buffer[4] << 8 | (uint16_t)can_rx_buffer[5]));
-            u_int16_t za = (((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]));
-            double x_acc = xa*9.81/2048; // +-16g
-            double y_acc = ya*9.81/2048; 
-            double z_acc = za*9.81/2048; 
+            xa = (((uint16_t)can_rx_buffer[2] << 8 | (uint16_t)can_rx_buffer[3]));
+            ya = (((uint16_t)can_rx_buffer[4] << 8 | (uint16_t)can_rx_buffer[5]));
+            za = (((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]));
+            x_acc = xa*9.81/2048; // +-16g
+            y_acc = ya*9.81/2048; 
+            z_acc = za*9.81/2048; 
             IMU_data[0] += x_acc;
             IMU_data[1] += y_acc;
             IMU_data[2] += z_acc;
@@ -285,11 +295,11 @@ void can_msg_handle(uintptr_t context)
             break;
         
         // dps
-        case SENSOR_GYRO:
+        case MSG_SENSOR_GYRO:
             // Timestamp
 
-            u_int16_t zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
-            double z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
+            zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
+            z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
             // dps to rps
 
             double timestamp = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;

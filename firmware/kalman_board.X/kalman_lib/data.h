@@ -3,7 +3,7 @@
 #include "kalman_lib.h"
 
 
-void update_rotation_filter(double new_time, double angular_position, double angular_velocity);
+void update_rotation_filter(double new_time, double angular_velocity);
 
 double get_orientation();
 
