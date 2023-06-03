@@ -8,6 +8,8 @@ void update_rotation_filter(double new_time, double angular_position, double ang
 double get_orientation();
 double get_angular_velocity();
 
+void set_control_vector(double dax, double day, double daz);
+
 void update_velocity_filter(double new_time, double x, double a_x, double y, double a_y, double z, double a_z);
 
 double* get_velocity();

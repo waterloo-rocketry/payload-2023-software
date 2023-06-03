@@ -127,6 +127,12 @@ struct Matrix G_vel = (struct Matrix) {G_arr, 9, 3};
 double u_inp[3] = {0, 0, 0};
 struct Vector u_vel = (struct Vector) {u_inp, 3};
 
+void set_control_vector(double dax, double day, double daz) {
+  u_inp[0] = dax;
+  u_inp[1] = day;
+  u_inp[2] = daz;
+}
+
 // Observation Matrix
 // This code is written assuming we are reading
 // position and acceleration in all 3 directions
