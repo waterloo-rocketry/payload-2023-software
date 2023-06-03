@@ -1,3 +1,5 @@
+#ifndef _GPSCONV_
+#define _GPSCONV_
 #include <math.h>
 #include <stdio.h>
 
@@ -17,14 +19,4 @@ double gps_conversion(double lat1, double long1, double lat2, double long2) {
     // Return the answer in meters
     return c * 1000;
 }
-
-int main() {
-    double lat1 = 50.0;
-    double long1 = -170.3;
-    double lat2 = 50.01;
-    double long2 = -170.29;
-
-    printf("%lf", gps_conversion(lat1, long1, lat2, long2)); // should be around 1 323 m
-
-    return 0;
-}
+#endif

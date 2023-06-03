@@ -30,6 +30,7 @@
 #include "../kalman_board.X/canlib/message_types.h"
 //#include "../kalman_board.X/kalman_lib/kalman_lib.h"
 #include "../kalman_board.X/kalman_lib/data.h"
+#include "gps_conversion.h"
 
 
 // *****************************************************************************
