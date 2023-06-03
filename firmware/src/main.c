@@ -62,15 +62,43 @@ double GPS_time = -1; // Keeps track of last MSG_GPS_TIMESTAMP
 double GPS_data_initial[3] = {-1, -1, -1};
 double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
 u_int8_t GPS_valid[3] = {0,0,0};
-double IMU_data[9] = {0,0,0,0,0,0,0,0,0}; // Accel XYZ & Gyro XYZ & Mag XYZ???
-u_int8_t IMU_count[9] = {0,0,0,0,0,0,0,0,0};
+double IMU_data[3] = {-1,-1,-1}; // Accel XYZ 
+u_int8_t IMU_count[3] = {0,0,0};
 
-double data[4][3] = {
-    {0.01, -0.6603976331469725, 2.8701727385873443},
-    {0.02, 0.5514217753381881, 1.786205976679928},
-    {0.03, -1.1823052592829146, 2.404824683140402},
-    {0.04, -0.9388002514842552, 2.551810961740738}
-};
+#define fifoNum 0
+#define msgAttr 0
+
+void sendMsg(double msg, double time){
+
+    const u_int8_t len = 7;
+
+    u_int8_t data[len];
+    
+    // message format: sssss.sss
+    // 3 digits behind dec point
+    u_int16_t wholetime = time;
+    double decs = (time - wholetime) * 100;
+    // note that deci time is at most 3 decimals after 0
+    u_int8_t decitime = decs;
+
+    data[0] = (wholetime >> 8) & 0xff;
+    data[1] = (wholetime >> 0) & 0xff;
+    data[2] = decitime;
+
+    // message format: mmmmm.mmmm
+    // 4 digits behind dec point
+    u_int16_t wholemsg = msg;
+    double decm = (msg - wholemsg) * 1000;
+    u_int16_t decimsg = decm;
+
+    data[3] = (wholemsg >> 8) & 0xff;
+    data[4] = (wholemsg >> 0) & 0xff;
+    data[5] = (decimsg >> 8) & 0xff;
+    data[6] = (decimsg >> 0) & 0xff;
+
+    CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, len, data, fifoNum, msgAttr);
+
+}
 
 int main ( void )
 {
@@ -105,8 +133,6 @@ int main ( void )
     {
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
-        //for(int i = 0; i < 100000; ++i);
-        
 
         // If we have GPS do KalmanIterate
         if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
@@ -119,28 +145,36 @@ int main ( void )
             GPS_data[1] /= GPS_valid[1];
             GPS_data[2] /= GPS_valid[2];
 
-            // TBD: Do Kalman with data from arrays
             struct Vector vel = (struct Vector) {get_velocity(), 3};
 
             struct Matrix Conv = reference_frame_correction(vel, get_orientation(), conv);
-                
-            struct Vector A_corr = vector_multiplication(Conv, (struct Vector) {a_prev, 3} , a_corr);
-            struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
+            
+            struct Vector A_corr = vector_multiplication(Conv, (struct Vector) {IMU_data, 3}, a_corr);
+            //struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
 
-            update_velocity_filter(GPS_time, x_corr[0], a_corr[0], x_corr[1], a_corr[1], x_corr[2], a_corr[2]);
+            // GPS Conv (coords to meters)
+
+            // timestamp, GPS_value[0], acc[0] ......
+            update_velocity_filter(GPS_time, x_prev, a_corr[0], x_corr[1], a_corr[1], GPS_data[2], a_corr[2]);
 
             const double *state = get_state();
+
+            // send data
+            sendMsg(state[0], GPS_time);
+            sendMsg(state[1], GPS_time);
+            sendMsg(state[2], GPS_time);
+            sendMsg(state[3], GPS_time);
+            sendMsg(state[4], GPS_time);
+            sendMsg(state[5], GPS_time);
+            sendMsg(state[6], GPS_time);
+            sendMsg(state[7], GPS_time);
+            sendMsg(state[8], GPS_time);
+            
             
             // Clear valid bits and zero the data if needed
             IMU_count[0] = 0;
             IMU_count[1] = 0;
             IMU_count[2] = 0;
-            IMU_count[3] = 0;
-            IMU_count[4] = 0;
-            IMU_count[5] = 0;
-            IMU_count[6] = 0;
-            IMU_count[7] = 0;
-            IMU_count[8] = 0;
 
             GPS_valid[0] = 0;
             GPS_valid[1] = 0;
@@ -178,6 +212,7 @@ void can_msg_handle(uintptr_t context)
             break;
         case MSG_GPS_TIMESTAMP:
             if (GPS_time == -1){
+                // To be actuated
                 // Zeroing
                 GPS_time = 0; 
             }
@@ -198,13 +233,13 @@ void can_msg_handle(uintptr_t context)
             u_int16_t dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
             lat += dmin*0.001;
 
-            GPS_data[0] += lat;
+            GPS_data[0] = lat;
 
             // Record initial
             if (GPS_data_initial[0] == -1){
                 GPS_data_initial[0] = GPS_data[0];
             }
-            GPS_valid[0] ++;
+            GPS_valid[0] = 1;
             break;
         case MSG_GPS_LON:
             // deciminute is 4 digits after minute
@@ -213,13 +248,13 @@ void can_msg_handle(uintptr_t context)
             u_int16_t dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
             lon += dmin*0.001;
 
-            GPS_data[1] += lon;
+            GPS_data[1] = lon;
 
             // Record initial
             if (GPS_data_initial[1] == -1){
                 GPS_data_initial[1] = GPS_data[0];
             }
-            GPS_valid[1] ++;
+            GPS_valid[1] = 1;
             break;
         case MSG_GPS_ALT:
             u_int16_t alt = (((uint16_t)can_rx_buffer[3] << 8 | (uint16_t)can_rx_buffer[4]));
@@ -227,8 +262,8 @@ void can_msg_handle(uintptr_t context)
             if (GPS_data_initial[2] == -1){
                 GPS_data_initial[2] = altitude;
             }
-            GPS_data[2] += altitude - GPS_data_initial[2];
-            GPS_valid[2] ++;
+            GPS_data[2] = altitude - GPS_data_initial[2];
+            GPS_valid[2] = 1;
             break;
 
         // ICM-20948
