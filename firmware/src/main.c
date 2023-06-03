@@ -289,7 +289,7 @@ void can_msg_handle(uintptr_t context)
             // Timestamp
 
             u_int16_t zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
-            double z_ang = zg/16.4/180*3.14159265; // +-2000 dps to radians             
+            double z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
             // dps to rps
 
             double timestamp = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;
