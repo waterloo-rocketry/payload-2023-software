@@ -30,7 +30,7 @@
 #include "../kalman_board.X/canlib/message_types.h"
 //#include "../kalman_board.X/kalman_lib/kalman_lib.h"
 #include "../kalman_board.X/kalman_lib/data.h"
-#include "gps_conversion.h"
+#include "../kalman_board.X/kalman_lib/gps_conversion.h"
 #include "../kalman_board.X/kalman_lib/orientation_conversion.h"
 
 
@@ -116,21 +116,6 @@ int main ( void )
     UART6_Write(&buffer[0], sizeof(buffer));
     CAN2_CallbackRegister(can_msg_handle, (uintptr_t)NULL, 1);
     CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
-    
-    /*
-    double new_time, ap, av;
-    for (int i = 0; i < 4; ++i) {
-        new_time = data[i][0];
-
-        // ap = data[i][1];
-        av = data[i][2];
-        
-        update_rotation_filter(new_time, av);
-        sprintf((char *) buffer, "%f\n", get_orientation());
-        
-        UART6_Write(buffer, sizeof(buffer));
-    }
-    */
 
     //We live in clown world
     //Message "receive" fHunction just binds memory to message location???
