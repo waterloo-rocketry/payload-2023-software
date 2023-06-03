@@ -56,13 +56,11 @@ int last_minutes = 0;
 int last_seconds = 0;
 int last_deciseconds = 0;
 
-double
 
 double GPS_time = -1; // Keeps track of last MSG_GPS_TIMESTAMP
 double GPS_data_initial[3] = {-1, -1, -1};
 double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
 u_int8_t GPS_valid[3] = {0,0,0};
-double IMU_time = -1;
 double IMU_data[9] = {0,0,0,0,0,0,0,0,0}; // Accel XYZ & Gyro XYZ & Mag XYZ???
 u_int8_t IMU_count[9] = {0,0,0,0,0,0,0,0,0};
 
@@ -81,17 +79,20 @@ int main ( void )
     CAN2_CallbackRegister(can_msg_handle, (uintptr_t)NULL, 1);
     CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     
+    /*
     double new_time, ap, av;
     for (int i = 0; i < 4; ++i) {
         new_time = data[i][0];
-        ap = data[i][1];
+
+        // ap = data[i][1];
         av = data[i][2];
         
-        update_rotation_filter(new_time, ap, av);
+        update_rotation_filter(new_time, av);
         sprintf((char *) buffer, "%f\n", get_orientation());
         
         UART6_Write(buffer, sizeof(buffer));
     }
+    */
 
     //We live in clown world
     //Message "receive" fHunction just binds memory to message location???
@@ -112,21 +113,11 @@ int main ( void )
             IMU_data[0] /= IMU_count[0];
             IMU_data[1] /= IMU_count[1];
             IMU_data[2] /= IMU_count[2];
-            IMU_data[3] /= IMU_count[3];
-            IMU_data[4] /= IMU_count[4];
-            IMU_data[5] /= IMU_count[5];
-            IMU_data[6] /= IMU_count[6];
-            IMU_data[7] /= IMU_count[7];
-            IMU_data[8] /= IMU_count[8];
 
             GPS_data[0] /= GPS_valid[0];
             GPS_data[1] /= GPS_valid[1];
             GPS_data[2] /= GPS_valid[2];
 
-            // TBD: Do math to get ap
-            // av is the Gyro Reading on z
-            double av = IMU_data[5];
-            
             // TBD: Do Kalman with data from arrays
             struct Vector vel = (struct Vector) {get_velocity(), 3};
 
@@ -135,7 +126,7 @@ int main ( void )
             struct Vector A_corr = vector_multiplication(Conv, (struct Vector) {a_prev, 3} , a_corr);
             struct Vector X_corr = vector_multiplication(Conv, (struct Vector) {x_prev, 3} , x_corr);
 
-            update_velocity_filter(new_time, x_corr[0], a_corr[0], x_corr[1], a_corr[1], x_corr[2], a_corr[2]);
+            update_velocity_filter(GPS_time, x_corr[0], a_corr[0], x_corr[1], a_corr[1], x_corr[2], a_corr[2]);
 
             const double *state = get_state();
             
@@ -239,15 +230,16 @@ void can_msg_handle(uintptr_t context)
             GPS_valid[2] ++;
             break;
 
-        // Assume AltIMU-v5
+        // ICM-20948
         // g
         case SENSOR_ACC:
+            // To m/s^2
             u_int16_t xa = (((uint16_t)can_rx_buffer[2] << 8 | (uint16_t)can_rx_buffer[3]));
             u_int16_t ya = (((uint16_t)can_rx_buffer[4] << 8 | (uint16_t)can_rx_buffer[5]));
             u_int16_t za = (((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]));
-            double x_acc = xa*0.488/1000; // Assume 16g (need to verify)
-            double y_acc = ya*0.488/1000; // Assume 16g (need to verify)
-            double z_acc = za*0.488/1000; // Assume 16g (need to verify)
+            double x_acc = xa*9.81/2048; // +-16g
+            double y_acc = ya*9.81/2048; 
+            double z_acc = za*9.81/2048; 
             IMU_data[0] += x_acc;
             IMU_data[1] += y_acc;
             IMU_data[2] += z_acc;
@@ -258,37 +250,17 @@ void can_msg_handle(uintptr_t context)
         
         // dps
         case SENSOR_GYRO:
-            u_int16_t xg = (((uint16_t)can_rx_buffer[2] << 8 | (uint16_t)can_rx_buffer[3]));
-            u_int16_t yg = (((uint16_t)can_rx_buffer[4] << 8 | (uint16_t)can_rx_buffer[5]));
-            u_int16_t zg = (((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]));
-            double x_ang = xg*70/1000; // Assume 2000dps (need to verify)
-            double y_ang = yg*70/1000; // Assume 2000dps (need to verify)
-            double z_ang = zg*70/1000; // Assume 2000dps (need to verify)
-            IMU_data[3] += x_ang;
-            IMU_data[4] += y_ang;
-            IMU_data[5] += z_ang;
-            IMU_count[3] ++;
-            IMU_count[4] ++;
-            IMU_count[5] ++;
-            break;
+            // Timestamp
 
-        // LIS3MDL
-        // gauss
-        case SENSOR_MAG:
-            u_int16_t xm = (((uint16_t)can_rx_buffer[2] << 8 | (uint16_t)can_rx_buffer[3]));
-            u_int16_t ym = (((uint16_t)can_rx_buffer[4] << 8 | (uint16_t)can_rx_buffer[5]));
-            u_int16_t zm = (((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]));
-            double x_mag = xm/1711; // Assume +-16g (need to verify)
-            double y_mag = ym/1711; // Assume +-16g (need to verify)
-            double z_mag = zm/1711; // Assume +-16g (need to verify)
-            IMU_data[6] += x_mag;
-            IMU_data[7] += y_mag;
-            IMU_data[8] += z_mag;
-            IMU_count[6] ++;
-            IMU_count[7] ++;
-            IMU_count[8] ++;
-            break;
+            u_int16_t zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
+            double z_ang = zg/16.4/180*3.14159265; // +-2000 dps to radians             
+            // dps to rps
 
+            double timestamp = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;
+
+            update_rotation_filter(timestamp, z_ang);
+
+            break;
     }
     
     CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type); //this is cursed. Doing this prevents a runtime error. Do not ask me why we have to rebind the same memory addresses to the same locations
