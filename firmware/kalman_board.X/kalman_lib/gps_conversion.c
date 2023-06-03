@@ -1,12 +1,10 @@
-#include <math.h>
-#include "kalman_lib.h"
-#include <stdio.h>
+#include "gps_conversion.h"
 
 double to_radians(double angle) {
-    return angle * M_PI / 180.0;
+    return angle * 3.14159265 / 180.0;
 }
 
-struct Vector gps_conversion(double lat1, double long1, double lat2, double long2) {
+void gps_conversion(double lat1, double long1, double lat2, double long2, double* resX, double* resY) {
     // Delta x and y
     double delta_y = lat2 - lat1;
     double delta_x = long2 - long1;
@@ -19,21 +17,7 @@ struct Vector gps_conversion(double lat1, double long1, double lat2, double long
     double km_per_long = 40075 * cos(to_radians(lat2)) / 360;
     double x_disp = delta_x * km_per_long;
 
-    // Return x and y displacement as a vector
-    double displacement[2] = {x_disp*1000, y_disp*1000};
-    return (struct Vector) {displacement, 2};
-}
-
-// Test
-int main() {
-    double lat1 = 50.0;
-    double long1 = -170.3;
-    double lat2 = 50.01;
-    double long2 = -170.29;
-
-    struct Vector result = gps_conversion(lat1, long1, lat2, long2);
-
-    printf("x = %lf, y = %lf\n", result.data[0], result.data[1]); 
-
-    return 0;
+    // Return x and y displacement in the referenced values
+    *resX = x_disp*1000;
+    *resY = y_disp*1000;
 }
