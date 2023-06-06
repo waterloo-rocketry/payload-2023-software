@@ -15,6 +15,7 @@
             <sourceRootList>
                 <sourceRootElem>../src</sourceRootElem>
                 <sourceRootElem>canlib</sourceRootElem>
+                <sourceRootElem>kalman_lib</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

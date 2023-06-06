@@ -34,7 +34,7 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
               &new_time, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2, &ap, &av,
               dat, dat+3, dat+6, dat+1, dat+4, dat+7, dat+2, dat+5, dat+8);
 
-        update_rotation_filter(new_time, ap, av);
+        update_rotation_filter(new_time, av);
         struct Vector vel = (struct Vector) {get_velocity(), 3};
 
         // I take it that Angle States are x_sl and you meant to use get_orientation
