@@ -83,16 +83,15 @@ void sendMsg(double msg, double time){
 
     u_int8_t data[len];
     
-    // message format: sssss.sss
-    // 3 digits behind dec point
-    u_int16_t wholetime = time;
-    double decs = (time - wholetime) * 100;
-    // note that deci time is at most 3 decimals after 0
-    u_int8_t decitime = decs;
+    time *= 1000;
 
-    data[0] = (wholetime >> 8) & 0xff;
-    data[1] = (wholetime >> 0) & 0xff;
-    data[2] = decitime;
+    // 24-bit timestamp in milliseconds
+    // Top 8 bits are left empty
+    u_int32_t wholetime = time;
+
+    data[0] = (wholetime >> 16) & 0xff;     // 00000000 (01234567) 01234567  01234567
+    data[1] = (wholetime >> 8) & 0xff;      // 00000000  01234567 (01234567) 01234567
+    data[2] = (wholetime >> 0) & 0xff;      // 00000000  01234567  01234567 (01234567)
 
     // message format: mmmmm.mmmm
     // 4 digits behind dec point
