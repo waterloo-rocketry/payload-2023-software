@@ -105,7 +105,7 @@ void sendMsg(double msg, double time){
     data[5] = (decimsg >> 8) & 0xff;
     data[6] = (decimsg >> 0) & 0xff;
 
-    CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, len, data, fifoNum, msgAttr);
+    CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
 
 }
 
@@ -122,6 +122,8 @@ int main ( void )
     CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type);
     CAN2_Rx_Filter_Manual_Config(); //Fix Rx filter mask config cause the MCC function just does it wrong
     
+    int counter = 0;
+    
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
@@ -129,7 +131,15 @@ int main ( void )
         SYS_Tasks ( );
 
         // If we have GPS do KalmanIterate
-        if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
+        if (counter > 10000000) { 
+            sendMsg(0,1);
+            counter = 0;
+        } 
+        
+        counter++;
+        
+        if (false) { //(GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
+            
             // Find averages
             IMU_data[0] /= IMU_count[0];
             IMU_data[1] /= IMU_count[1];
