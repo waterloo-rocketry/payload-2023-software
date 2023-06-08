@@ -1,26 +1,25 @@
 /*******************************************************************************
- System Interrupts File
+  TMR Peripheral Library Interface Header File
 
-  Company:
+  Company
     Microchip Technology Inc.
 
-  File Name:
-    interrupt.c
+  File Name
+    plib_tmr_common.h
 
-  Summary:
-    Interrupt vectors mapping
+  Summary
+    TMR peripheral library interface.
 
-  Description:
-    This file maps all the interrupt vectors to their corresponding
-    implementations. If a particular module interrupt is used, then its ISR
-    definition can be found in corresponding PLIB source file. If a module
-    interrupt is not used, then its ISR implementation is mapped to dummy
-    handler.
- *******************************************************************************/
+  Description
+    This file defines the interface to the TC peripheral library.  This
+    library provides access to and control of the associated peripheral
+    instance.
+
+*******************************************************************************/
 
 // DOM-IGNORE-BEGIN
 /*******************************************************************************
-* Copyright (C) 2018 Microchip Technology Inc. and its subsidiaries.
+* Copyright (C) 2019 Microchip Technology Inc. and its subsidiaries.
 *
 * Subject to your compliance with these terms, you may use Microchip software
 * and any derivatives exclusively with Microchip products. It is your
@@ -40,8 +39,12 @@
 * FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN
 * ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
- *******************************************************************************/
+*******************************************************************************/
 // DOM-IGNORE-END
+
+#ifndef PLIB_TMR_COMMON_H    // Guards against multiple inclusion
+#define PLIB_TMR_COMMON_H
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -49,54 +52,69 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#include "interrupts.h"
-#include "definitions.h"
+/*  This section lists the other files that are included in this file.
+*/
+#include <stddef.h>
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+
+// DOM-IGNORE-END
 
 // *****************************************************************************
 // *****************************************************************************
-// Section: System Interrupt Vector Functions
+// Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
+/*  The following data type definitions are used by the functions in this
+    interface and should be considered part of it.
+*/
 
 
-void TIMER_2_InterruptHandler( void );
-void CAN2_InterruptHandler( void );
-void UART6_FAULT_InterruptHandler( void );
-void UART6_RX_InterruptHandler( void );
-void UART6_TX_InterruptHandler( void );
+// *****************************************************************************
+/* TMR_CALLBACK
 
+  Summary:
+    Use to register a callback with the TMR.
 
+  Description:
+    When a match is asserted, a callback can be activated.
+    Use TMR_CALLBACK as the function pointer to register the callback
+    with the match.
 
-/* All the handlers are defined here.  Each will call its PLIB-specific function. */
-void __ISR(_TIMER_2_VECTOR, ipl1SRS) TIMER_2_Handler (void)
+  Remarks:
+    The callback should look like:
+      void callback(handle, context);
+	Make sure the return value and parameters of the callback are correct.
+*/
+
+typedef void (*TMR_CALLBACK)(uint32_t status, uintptr_t context);
+
+// *****************************************************************************
+
+typedef struct
 {
-    TIMER_2_InterruptHandler();
+    /*TMR callback function happens on Period match*/
+    TMR_CALLBACK callback_fn;
+    /* - Client data (Event Context) that will be passed to callback */
+    uintptr_t context;
+
+}TMR_TIMER_OBJECT;
+
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
 }
 
-void __ISR(_CAN2_VECTOR, ipl1SRS) CAN2_Handler (void)
-{
-    CAN2_InterruptHandler();
-}
+#endif
+// DOM-IGNORE-END
 
-void __ISR(_UART6_FAULT_VECTOR, ipl1SRS) UART6_FAULT_Handler (void)
-{
-    UART6_FAULT_InterruptHandler();
-}
+#endif //_PLIB_TMR_COMMON_H
 
-void __ISR(_UART6_RX_VECTOR, ipl1SRS) UART6_RX_Handler (void)
-{
-    UART6_RX_InterruptHandler();
-}
-
-void __ISR(_UART6_TX_VECTOR, ipl1SRS) UART6_TX_Handler (void)
-{
-    UART6_TX_InterruptHandler();
-}
-
-
-
-
-/*******************************************************************************
+/**
  End of File
 */

@@ -48,6 +48,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "peripheral/tmr/plib_tmr2.h"
 #include "peripheral/can/plib_can2.h"
 #include "peripheral/clk/plib_clk.h"
 #include "peripheral/gpio/plib_gpio.h"
@@ -111,8 +112,6 @@ extern "C" {
 */
 
 void SYS_Initialize( void *data );
-
-void CAN2_Rx_Filter_Manual_Config(void);
 
 /* Nullify SYS_Tasks() if only PLIBs are used. */
 #define     SYS_Tasks()

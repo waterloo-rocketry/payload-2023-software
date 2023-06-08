@@ -1,26 +1,25 @@
 /*******************************************************************************
- System Interrupts File
+  Data Type definition of Timer PLIB
 
   Company:
     Microchip Technology Inc.
 
   File Name:
-    interrupt.c
+    plib_tmr2.h
 
   Summary:
-    Interrupt vectors mapping
+    Data Type definition of the Timer Peripheral Interface Plib.
 
   Description:
-    This file maps all the interrupt vectors to their corresponding
-    implementations. If a particular module interrupt is used, then its ISR
-    definition can be found in corresponding PLIB source file. If a module
-    interrupt is not used, then its ISR implementation is mapped to dummy
-    handler.
- *******************************************************************************/
+    This file defines the Data Types for the Timer Plib.
 
-// DOM-IGNORE-BEGIN
+  Remarks:
+    None.
+
+*******************************************************************************/
+
 /*******************************************************************************
-* Copyright (C) 2018 Microchip Technology Inc. and its subsidiaries.
+* Copyright (C) 2019 Microchip Technology Inc. and its subsidiaries.
 *
 * Subject to your compliance with these terms, you may use Microchip software
 * and any derivatives exclusively with Microchip products. It is your
@@ -40,63 +39,63 @@
 * FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN
 * ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
- *******************************************************************************/
+*******************************************************************************/
+
+#ifndef PLIB_TMR2_H
+#define PLIB_TMR2_H
+
+#include <stddef.h>
+#include <stdint.h>
+#include "device.h"
+#include "plib_tmr_common.h"
+
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+    extern "C" {
+
+#endif
 // DOM-IGNORE-END
 
 // *****************************************************************************
 // *****************************************************************************
-// Section: Included Files
+// Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
 
-#include "interrupts.h"
-#include "definitions.h"
-
-
 // *****************************************************************************
 // *****************************************************************************
-// Section: System Interrupt Vector Functions
+// Section: Interface Routines
 // *****************************************************************************
 // *****************************************************************************
 
 
-void TIMER_2_InterruptHandler( void );
-void CAN2_InterruptHandler( void );
-void UART6_FAULT_InterruptHandler( void );
-void UART6_RX_InterruptHandler( void );
-void UART6_TX_InterruptHandler( void );
+// *****************************************************************************
+void TMR2_Initialize(void);
 
+void TMR2_Start(void);
 
+void TMR2_Stop(void);
 
-/* All the handlers are defined here.  Each will call its PLIB-specific function. */
-void __ISR(_TIMER_2_VECTOR, ipl1SRS) TIMER_2_Handler (void)
-{
-    TIMER_2_InterruptHandler();
-}
+void TMR2_PeriodSet(uint16_t);
 
-void __ISR(_CAN2_VECTOR, ipl1SRS) CAN2_Handler (void)
-{
-    CAN2_InterruptHandler();
-}
+uint16_t TMR2_PeriodGet(void);
 
-void __ISR(_UART6_FAULT_VECTOR, ipl1SRS) UART6_FAULT_Handler (void)
-{
-    UART6_FAULT_InterruptHandler();
-}
+uint16_t TMR2_CounterGet(void);
 
-void __ISR(_UART6_RX_VECTOR, ipl1SRS) UART6_RX_Handler (void)
-{
-    UART6_RX_InterruptHandler();
-}
+uint32_t TMR2_FrequencyGet(void);
 
-void __ISR(_UART6_TX_VECTOR, ipl1SRS) UART6_TX_Handler (void)
-{
-    UART6_TX_InterruptHandler();
-}
+void TMR2_InterruptEnable(void);
 
+void TMR2_InterruptDisable(void);
 
+void TMR2_CallbackRegister( TMR_CALLBACK callback_fn, uintptr_t context );
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
 
-/*******************************************************************************
- End of File
-*/
+    }
+#endif
+// DOM-IGNORE-END
+
+#endif /* PLIB_TMR2_H */
