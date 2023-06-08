@@ -112,6 +112,7 @@ extern "C" {
 */
 
 void SYS_Initialize( void *data );
+void CAN2_Rx_Filter_Manual_Config(void);
 
 /* Nullify SYS_Tasks() if only PLIBs are used. */
 #define     SYS_Tasks()
