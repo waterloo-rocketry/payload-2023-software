@@ -39,11 +39,11 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
               &new_time, &ap, &av, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2,
               dat, dat+1, dat+2, dat+3, dat+4, dat+5, dat+6, dat+7, dat+8);
 
-        set_control_vector(accelData[i][0] - a_x, accelData[i][1] - a_y, accelData[i][2] - a_z);
+        set_control_vector(accel_data[i][0] - a_x, accel_data[i][1] - a_y, accel_data[i][2] - a_z);
 
-        a_x = accelData[i][0];
-        a_y = accelData[i][1];
-        a_z = accelData[i][2];
+        a_x = accel_data[i][0];
+        a_y = accel_data[i][1];
+        a_z = accel_data[i][2];
 
         update_rotation_filter(new_time, ap, av);
         double vel_true_dat[3] = {dat[3], dat[4], dat[5]};
