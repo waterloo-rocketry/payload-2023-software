@@ -1,0 +1,49 @@
+# all time in seconds
+
+inputs:
+
+  duration: 20
+  dt: 0.01
+
+  # missing a or tau is implicitly [0,0,0]
+  events:
+  -
+    t: 1
+    a: [5,0,0]
+  -
+    t: 3
+  -
+    t: 5
+    tau: [1,0,0]
+  -
+    t: 7
+    a: [0,1,0]
+  -
+    t: 9
+
+outputs:
+- t
+- x
+- y
+- z
+- sensor_x
+- sensor_y
+- sensor_z
+- vx
+- vy
+- vz
+- ax
+- ay
+- az
+- sensor_ax
+- sensor_ay
+- sensor_az
+- omega_x
+- omega_y
+- omega_z
+- sensor_omega_x
+- sensor_omega_y
+- sensor_omega_z
+- tau_x
+- tau_y
+- tau_z

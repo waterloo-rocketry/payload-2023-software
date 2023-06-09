@@ -8,6 +8,9 @@ out.out
 out.csv
 o_test
 
+__pycache__
+.ipynb_checkpoints
+
 # MPLAB X
 
 *.d
