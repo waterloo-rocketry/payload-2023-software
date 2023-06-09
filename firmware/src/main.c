@@ -24,6 +24,7 @@
 
 #include <stddef.h>                     // Defines NULL
 #include <stdbool.h>                    // Defines true
+#include <stdint.h>
 #include <stdlib.h>                     // Defines EXIT_FAILURE
 #include <sys/types.h>
 #include "definitions.h"                // SYS function prototypes
@@ -77,7 +78,17 @@ double a_corr[3];
 #define fifoNum 0
 #define msgAttr 0
 
-void sendMsg(double msg, double time){
+#define KALMAN_X 0
+#define KALMAN_Y 1
+#define KALMAN_Z 2
+#define KALMAN_XV 3
+#define KALMAN_YV 4
+#define KALMAN_ZV 5
+#define KALMAN_XA 6
+#define KALMAN_YA 7
+#define KALMAN_ZA 8
+
+void sendMsg(double time, double message, u_int8_t datatype){
 
     const u_int8_t len = 7;
 
@@ -93,18 +104,45 @@ void sendMsg(double msg, double time){
     data[1] = (wholetime >> 8) & 0xff;      // 00000000  01234567 (01234567) 01234567
     data[2] = (wholetime >> 0) & 0xff;      // 00000000  01234567  01234567 (01234567)
 
-    // message format: mmmmm.mmmm
     // 4 digits behind dec point
-    u_int16_t wholemsg = msg;
-    double decm = (msg - wholemsg) * 1000;
-    u_int16_t decimsg = decm;
+    message *= 1000;
+    int32_t msg = message;
 
-    data[3] = (wholemsg >> 8) & 0xff;
-    data[4] = (wholemsg >> 0) & 0xff;
-    data[5] = (decimsg >> 8) & 0xff;
-    data[6] = (decimsg >> 0) & 0xff;
+    data[3] = (msg >> 24) & 0xff;
+    data[4] = (msg >> 16) & 0xff;
+    data[5] = (msg >> 8) & 0xff;
+    data[6] = (msg >> 0) & 0xff;
 
-    CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
+
+    switch (datatype) {
+        case KALMAN_X:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_X, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_Y:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_Z:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Z, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_XV:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XV, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_YV:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YV, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_ZV:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZV, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_XA:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XA, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_YA:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YA, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_ZA:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZA, len, data, fifoNum, msgAttr);
+            break;
+    }
 
 }
 
@@ -129,7 +167,6 @@ int main ( void )
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
 
-        // If we have GPS do KalmanIterate
         if (counter > 10000000) { 
             sendMsg(0,1);
             counter = 0;
@@ -137,6 +174,7 @@ int main ( void )
         
         counter++;
         
+        // If we have GPS do KalmanIterate
         if (false) { //(GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
             
             // Find averages
@@ -166,15 +204,9 @@ int main ( void )
             const double *state = get_state();
 
             // send data
-            sendMsg(state[0], GPS_time);
-            sendMsg(state[1], GPS_time);
-            sendMsg(state[2], GPS_time);
-            sendMsg(state[3], GPS_time);
-            sendMsg(state[4], GPS_time);
-            sendMsg(state[5], GPS_time);
-            sendMsg(state[6], GPS_time);
-            sendMsg(state[7], GPS_time);
-            sendMsg(state[8], GPS_time);
+            for (int i = 0; i < 8; i++){
+                sendMsg(state[i], GPS_time, i);
+            }
             
             
             // Clear valid bits and zero the data if needed
