@@ -20,6 +20,16 @@ double a_x = 0;
 double a_y = 0;
 double a_z = 0;
 
+int last_found = 0;
+
+int find_time_stamp(double t) {
+    for(; last_found < 1511; ++last_found) {
+        if (time_stamps[last_found] >= t) {
+            return last_found;
+        }
+    }
+}
+
 int main() {
     printf(
 "X Predicted,X Velocity Predicted,X Acceleration Predicted,\
@@ -39,11 +49,13 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
               &new_time, &ap, &av, x_prev, x_prev + 1, x_prev + 2, a_prev, a_prev + 1, a_prev + 2,
               dat, dat+1, dat+2, dat+3, dat+4, dat+5, dat+6, dat+7, dat+8);
 
-        set_control_vector(accel_data[i][0] - a_x, accel_data[i][1] - a_y, accel_data[i][2] - a_z);
+        int or_timestamp = find_time_stamp(new_time);
 
-        a_x = accel_data[i][0];
-        a_y = accel_data[i][1];
-        a_z = accel_data[i][2];
+        set_control_vector(accel_data[or_timestamp][0] - a_x, accel_data[or_timestamp][1] - a_y, accel_data[or_timestamp][2] - a_z);
+
+        a_x = accel_data[or_timestamp][0];
+        a_y = accel_data[or_timestamp][1];
+        a_z = accel_data[or_timestamp][2];
 
         update_rotation_filter(new_time, ap, av);
         double vel_true_dat[3] = {dat[3], dat[4], dat[5]};
