@@ -68,6 +68,8 @@ void UART6_TX_InterruptHandler( void );
 
 
 
+
+
 /* All the handlers are defined here.  Each will call its PLIB-specific function. */
 void __ISR(_TIMER_2_VECTOR, ipl1SRS) TIMER_2_Handler (void)
 {
@@ -93,9 +95,6 @@ void __ISR(_UART6_TX_VECTOR, ipl1SRS) UART6_TX_Handler (void)
 {
     UART6_TX_InterruptHandler();
 }
-
-
-
 
 /*******************************************************************************
  End of File

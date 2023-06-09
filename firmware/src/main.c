@@ -40,6 +40,11 @@
 // *****************************************************************************
 // *****************************************************************************
 void can_msg_handle(uintptr_t context);
+void timer_2_callback (uint32_t status, uintptr_t context);
+uint32_t millis(void);
+
+uint32_t last_millis = 0;
+#define MILLIS_STUFF 5000
 
 uint8_t buffer[]= "Hello World!\r\n";
 uint8_t status[] = {0x00, 0xFF, 0xFF, 0x00};
@@ -121,21 +126,30 @@ int main ( void )
     CAN2_MessageReceive(&id, &length, can_rx_buffer, &timestamp, 1, &frame_type);
     CAN2_Rx_Filter_Manual_Config(); //Fix Rx filter mask config cause the MCC function just does it wrong
     
-    int counter = 0;
+    //timer stuff
+    TMR2_Start();
+    TMR2_InterruptEnable();
+    TMR2_CallbackRegister(timer_2_callback, (uintptr_t)NULL);
+   
     
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
+        //for(int i=0; i < 100000; i++)
+        if((millis() - last_millis) > MILLIS_STUFF)
+        {
+            
+            last_millis = millis();
+            status[0] = (last_millis >> 24) & 0xFF;
+            status[1] = (last_millis >> 16) & 0xFF;
+            status[2] = (last_millis >> 8) & 0xFF;
+            status[3] = (last_millis) & 0xFF;
+            UART6_Write(&status[0], sizeof(status));
+            LATJbits.LATJ3 = !LATJbits.LATJ3; 
+        }
+        
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
-
-        // If we have GPS do KalmanIterate
-        if (counter > 10000000) { 
-            sendMsg(0,1);
-            counter = 0;
-        } 
-        
-        counter++;
         
         if (false) { //(GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
             
@@ -307,7 +321,22 @@ void can_msg_handle(uintptr_t context)
     
 }
 
-/*******************************************************************************
- End of File
-*/
+void timer_2_callback (uint32_t status, uintptr_t context)
+{
+    static uint8_t internal_count = 0;
+
+    millis_counter += MILLIS_INCREMENT;
+    internal_count += MILLIS_REMAINDER;
+    if (internal_count > MILLIS_INCREMENT_CAP) {
+        internal_count -= MILLIS_INCREMENT_CAP;
+        millis_counter++;
+    }
+}
+
+uint32_t millis(void) {
+    TMR2_InterruptDisable();
+    uint32_t res = millis_counter;
+    TMR2_InterruptEnable();
+    return res;
+}
 

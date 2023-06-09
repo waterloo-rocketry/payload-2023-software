@@ -65,6 +65,11 @@ extern "C" {
 
 /* CPU clock frequency */
 #define CPU_CLOCK_FREQUENCY 200000000
+    
+volatile static uint32_t millis_counter = 0;
+#define MILLIS_INCREMENT 0
+#define MILLIS_REMAINDER 1
+#define MILLIS_INCREMENT_CAP 10
 
 // *****************************************************************************
 // *****************************************************************************
@@ -73,46 +78,11 @@ extern "C" {
 // *****************************************************************************
 
 // *****************************************************************************
-/* System Initialization Function
 
-  Function:
-    void SYS_Initialize( void *data )
-
-  Summary:
-    Function that initializes all modules in the system.
-
-  Description:
-    This function initializes all modules in the system, including any drivers,
-    services, middleware, and applications.
-
-  Precondition:
-    None.
-
-  Parameters:
-    data            - Pointer to the data structure containing any data
-                      necessary to initialize the module. This pointer may
-                      be null if no data is required and default initialization
-                      is to be used.
-
-  Returns:
-    None.
-
-  Example:
-    <code>
-    SYS_Initialize ( NULL );
-
-    while ( true )
-    {
-        SYS_Tasks ( );
-    }
-    </code>
-
-  Remarks:
-    This function will only be called once, after system reset.
-*/
 
 void SYS_Initialize( void *data );
 void CAN2_Rx_Filter_Manual_Config(void);
+uint32_t millis(void);
 
 /* Nullify SYS_Tasks() if only PLIBs are used. */
 #define     SYS_Tasks()
