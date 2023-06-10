@@ -57,6 +57,10 @@ uint16_t timestamp;
 uint32_t id;
 CAN_MSG_RX_ATTRIBUTE frame_type;
 
+bool sendZ = 0;
+bool sendY = 0;
+bool CanTxStatus = 0;
+
 
 // Kalman Bufferpool
 
@@ -126,7 +130,8 @@ void sendMsg(double time, double message, u_int8_t datatype){
             CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_X, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_Y:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
+            CanTxStatus = CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
+            //sendY = 1;
             break;
         case KALMAN_Z:
             CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Z, len, data, fifoNum, msgAttr);
@@ -175,12 +180,22 @@ int main ( void )
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
+        if (sendZ){
+            CanTxStatus = 0;
+            sendMsg(millis(), 69, 1);
+            sendZ = 0;
+        }
 #define debug_str_len 12
         char val[debug_str_len] = "12\n";
         //for(int i=0; i < 100000; i++)
         if((millis() - last_millis) > MILLIS_STUFF)
         {
-            
+            if(sendY)
+            {
+                u_int8_t data1[7] = {0, 1, 2, 3, 4, 5, 6};
+                CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, 7, data1, fifoNum, msgAttr);
+                sendY = 0;
+            }
             last_millis = millis();
             status[0] = (last_millis >> 24) & 0xFF;
             status[1] = (last_millis >> 16) & 0xFF;
@@ -191,8 +206,8 @@ int main ( void )
 
             UART6_Write(&val[0], sizeof(val));
 
-            sendMsg((double)last_millis, 10, 1);
-            //LATJbits.LATJ3 = !LATJbits.LATJ3; 
+            //sendMsg((double)last_millis, 10, 1);
+            LATJbits.LATJ3 = !LATJbits.LATJ3; 
         }
         
         /* Maintain state machines of all polled MPLAB Harmony modules. */
@@ -260,6 +275,9 @@ void can_msg_handle(uintptr_t context)
     uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
     double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang;
     uint16_t alt, xa, ya, za, dmin, zg;
+    
+    //sendMsg(9999, 69, 1);
+    
     switch (msg_id) {
         case MSG_LEDS_ON:
             LATJbits.LATJ3 = 0;
@@ -348,13 +366,13 @@ void can_msg_handle(uintptr_t context)
         // dps
         case MSG_SENSOR_GYRO:
             // Timestamp
-            zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
-            z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
+           // zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
+           // z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
             // dps to rps
 
-            double timestamp = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;
-
-            update_rotation_filter(timestamp, z_ang);
+           // double timestamp = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;
+            sendZ = 1;
+            //update_rotation_filter(timestamp, z_ang);
 
             break;
     }
