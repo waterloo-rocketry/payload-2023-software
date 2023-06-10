@@ -22,9 +22,11 @@
 // *****************************************************************************
 // *****************************************************************************
 
+#include <math.h>
 #include <stddef.h>                     // Defines NULL
 #include <stdbool.h>                    // Defines true
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>                     // Defines EXIT_FAILURE
 #include <sys/types.h>
 #include "definitions.h"                // SYS function prototypes
@@ -45,7 +47,7 @@ void timer_2_callback (uint32_t status, uintptr_t context);
 uint32_t millis(void);
 
 uint32_t last_millis = 0;
-#define MILLIS_STUFF 5000
+#define MILLIS_STUFF 1000
 
 uint8_t buffer[]= "Hello World!\r\n";
 uint8_t status[] = {0x00, 0xFF, 0xFF, 0x00};
@@ -173,6 +175,8 @@ int main ( void )
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
+#define debug_str_len 12
+        char val[debug_str_len] = "12\n";
         //for(int i=0; i < 100000; i++)
         if((millis() - last_millis) > MILLIS_STUFF)
         {
@@ -182,13 +186,17 @@ int main ( void )
             status[1] = (last_millis >> 16) & 0xFF;
             status[2] = (last_millis >> 8) & 0xFF;
             status[3] = (last_millis) & 0xFF;
-            UART6_Write(&status[0], sizeof(status));
+
+            sprintf(val, "%d\n", last_millis);
+
+            UART6_Write(&val[0], sizeof(val));
+
+            sendMsg((double)last_millis, 10, 1);
             LATJbits.LATJ3 = !LATJbits.LATJ3; 
         }
         
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
-
         
         // If we have GPS do KalmanIterate
         if (false) { //(GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
@@ -251,6 +259,7 @@ void can_msg_handle(uintptr_t context)
     uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
     double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang;
     uint16_t alt, xa, ya, za, dmin, zg;
+    sendMsg(10,msg_id,0);
     switch (msg_id) {
         case MSG_LEDS_ON:
             LATJbits.LATJ3 = 0;
