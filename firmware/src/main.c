@@ -47,7 +47,7 @@ void timer_2_callback (uint32_t status, uintptr_t context);
 uint32_t millis(void);
 
 uint32_t last_millis = 0;
-#define MILLIS_STUFF 1000
+#define MILLIS_STUFF 1000 // Timer report interval
 
 uint8_t buffer[]= "Hello World!\r\n";
 uint8_t status[] = {0x00, 0xFF, 0xFF, 0x00};
@@ -57,9 +57,7 @@ uint16_t timestamp;
 uint32_t id;
 CAN_MSG_RX_ATTRIBUTE frame_type;
 
-bool sendZ = 0;
-bool sendY = 0;
-bool CanTxStatus = 0;
+bool recvZ = 0;
 
 
 // Kalman Bufferpool
@@ -78,6 +76,9 @@ double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
 u_int8_t GPS_valid[3] = {0,0,0};
 double IMU_data[3] = {-1,-1,-1}; // Accel XYZ 
 u_int8_t IMU_count[3] = {0,0,0};
+
+double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang, timeGyro;
+uint16_t alt, xa, ya, za, dmin, zg;
 
 double conv0[3];
 double conv1[3];
@@ -130,8 +131,7 @@ void sendMsg(double time, double message, u_int8_t datatype){
             CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_X, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_Y:
-            CanTxStatus = CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
-            //sendY = 1;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_Z:
             CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Z, len, data, fifoNum, msgAttr);
@@ -180,23 +180,10 @@ int main ( void )
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
-        if (sendZ){
-            CanTxStatus = 0;
-            sendMsg(millis(), 69, 1);
-            sendZ = 0;
-        }
-#define debug_str_len 12
-        char val[debug_str_len] = "12\n";
-        //for(int i=0; i < 100000; i++)
-        if((millis() - last_millis) > MILLIS_STUFF)
-        {
-            if(sendY)
-            {
-                u_int8_t data1[7] = {0, 1, 2, 3, 4, 5, 6};
-                CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, 7, data1, fifoNum, msgAttr);
-                sendY = 0;
-            }
-            last_millis = millis();
+        if (recvZ){
+            //sendMsg(timeGyro, zg, 1);
+            char val[12] = "12\n";
+            recvZ = 0;
             status[0] = (last_millis >> 24) & 0xFF;
             status[1] = (last_millis >> 16) & 0xFF;
             status[2] = (last_millis >> 8) & 0xFF;
@@ -205,6 +192,22 @@ int main ( void )
             sprintf(val, "%d\n", last_millis);
 
             UART6_Write(&val[0], sizeof(val));
+            update_rotation_filter(timeGyro, z_ang);
+        }
+        //#define debug_str_len 12
+        //char val[debug_str_len] = "12\n";
+        //for(int i=0; i < 100000; i++)
+        if((millis() - last_millis) > MILLIS_STUFF)
+        {
+            /*
+            status[0] = (last_millis >> 24) & 0xFF;
+            status[1] = (last_millis >> 16) & 0xFF;
+            status[2] = (last_millis >> 8) & 0xFF;
+            status[3] = (last_millis) & 0xFF;
+
+            sprintf(val, "%d\n", last_millis);
+            */
+            //UART6_Write(&val[0], sizeof(val));
 
             //sendMsg((double)last_millis, 10, 1);
             LATJbits.LATJ3 = !LATJbits.LATJ3; 
@@ -273,8 +276,6 @@ void can_msg_handle(uintptr_t context)
 
     //might need to filter messages coming from the same board
     uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
-    double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang;
-    uint16_t alt, xa, ya, za, dmin, zg;
     
     //sendMsg(9999, 69, 1);
     
@@ -366,13 +367,12 @@ void can_msg_handle(uintptr_t context)
         // dps
         case MSG_SENSOR_GYRO:
             // Timestamp
-           // zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
-           // z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
+            zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
+            z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
             // dps to rps
 
-           // double timestamp = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;
-            sendZ = 1;
-            //update_rotation_filter(timestamp, z_ang);
+            timeGyro = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001;
+            recvZ = 1;
 
             break;
     }
