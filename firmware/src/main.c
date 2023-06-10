@@ -192,7 +192,7 @@ int main ( void )
             UART6_Write(&val[0], sizeof(val));
 
             sendMsg((double)last_millis, 10, 1);
-            LATJbits.LATJ3 = !LATJbits.LATJ3; 
+            //LATJbits.LATJ3 = !LATJbits.LATJ3; 
         }
         
         /* Maintain state machines of all polled MPLAB Harmony modules. */
@@ -254,12 +254,12 @@ int main ( void )
 
 void can_msg_handle(uintptr_t context)
 {
+    //sendMsg((double)1, 1, 0);
 
     //might need to filter messages coming from the same board
     uint16_t msg_id = id & 0x7E0; //grab msg SID from global var which should have been populated by the interrupt handler
     double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang;
     uint16_t alt, xa, ya, za, dmin, zg;
-    sendMsg(10,msg_id,0);
     switch (msg_id) {
         case MSG_LEDS_ON:
             LATJbits.LATJ3 = 0;
@@ -348,7 +348,6 @@ void can_msg_handle(uintptr_t context)
         // dps
         case MSG_SENSOR_GYRO:
             // Timestamp
-
             zg = ((uint16_t)can_rx_buffer[6] << 8 | (uint16_t)can_rx_buffer[7]);
             z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
             // dps to rps
