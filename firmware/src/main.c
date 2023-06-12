@@ -44,6 +44,7 @@
 // *****************************************************************************
 void can_msg_handle(uintptr_t context);
 void timer_2_callback (uint32_t status, uintptr_t context);
+void sendMsg(double time, double message, u_int8_t datatype);
 uint32_t millis(void);
 
 uint32_t last_millis = 0;
@@ -73,7 +74,7 @@ int last_deciseconds = 0;
 double GPS_time = -1; // Keeps track of last MSG_GPS_TIMESTAMP
 double GPS_data_initial[3] = {-1, -1, -1};
 double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
-u_int8_t GPS_valid[3] = {0,0,0};
+u_int8_t GPS_valid[4] = {0,0,0,0};
 double IMU_data[3] = {-1,-1,-1}; // Accel XYZ 
 u_int8_t IMU_count[3] = {0,0,0};
 
@@ -100,63 +101,7 @@ double a_corr[3];
 #define KALMAN_YA 7
 #define KALMAN_ZA 8
 
-void sendMsg(double time, double message, u_int8_t datatype){
 
-    const u_int8_t len = 7;
-
-    u_int8_t data[len];
-    
-    time *= 1000;
-
-    // 24-bit timestamp in milliseconds
-    // Top 8 bits are left empty
-    u_int32_t wholetime = time;
-
-    data[0] = (wholetime >> 16) & 0xff;     // 00000000 (01234567) 01234567  01234567
-    data[1] = (wholetime >> 8) & 0xff;      // 00000000  01234567 (01234567) 01234567
-    data[2] = (wholetime >> 0) & 0xff;      // 00000000  01234567  01234567 (01234567)
-
-    // 4 digits behind dec point
-    message *= 1000;
-    int32_t msg = message;
-
-    data[3] = (msg >> 24) & 0xff;
-    data[4] = (msg >> 16) & 0xff;
-    data[5] = (msg >> 8) & 0xff;
-    data[6] = (msg >> 0) & 0xff;
-
-
-    switch (datatype) {
-        case KALMAN_X:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_X, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_Y:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_Z:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Z, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_XV:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XV, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_YV:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YV, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_ZV:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZV, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_XA:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XA, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_YA:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YA, len, data, fifoNum, msgAttr);
-            break;
-        case KALMAN_ZA:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZA, len, data, fifoNum, msgAttr);
-            break;
-    }
-
-}
 
 int main ( void )
 {
@@ -181,35 +126,15 @@ int main ( void )
     while ( true )
     {
         if (recvZ){
-            //sendMsg(timeGyro, zg, 1);
-            char val[12] = "12\n";
             recvZ = 0;
-            status[0] = (last_millis >> 24) & 0xFF;
-            status[1] = (last_millis >> 16) & 0xFF;
-            status[2] = (last_millis >> 8) & 0xFF;
-            status[3] = (last_millis) & 0xFF;
-
-            sprintf(val, "%d\n", last_millis);
-
-            UART6_Write(&val[0], sizeof(val));
             update_rotation_filter(timeGyro, z_ang);
+            //sendMsg(timeGyro, get_orientation() , 8);
         }
-        //#define debug_str_len 12
-        //char val[debug_str_len] = "12\n";
-        //for(int i=0; i < 100000; i++)
+
         if((millis() - last_millis) > MILLIS_STUFF)
         {
-            /*
-            status[0] = (last_millis >> 24) & 0xFF;
-            status[1] = (last_millis >> 16) & 0xFF;
-            status[2] = (last_millis >> 8) & 0xFF;
-            status[3] = (last_millis) & 0xFF;
-
-            sprintf(val, "%d\n", last_millis);
-            */
-            //UART6_Write(&val[0], sizeof(val));
-
-            //sendMsg((double)last_millis, 10, 1);
+            last_millis = millis();
+            //sendMsg(69, millis(), 0);
             LATJbits.LATJ3 = !LATJbits.LATJ3; 
         }
         
@@ -217,7 +142,7 @@ int main ( void )
         SYS_Tasks ( );
         
         // If we have GPS do KalmanIterate
-        if (false) { //(GPS_valid[0] && GPS_valid[1] && GPS_valid[2]){
+        if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2] && GPS_valid[3]){
             
             // Find averages
             IMU_data[0] /= IMU_count[0];
@@ -246,9 +171,16 @@ int main ( void )
             const double *state = get_state();
 
             // send data
-            for (int i = 0; i < 8; i++){
-                sendMsg(state[i], GPS_time, i);
+           //sendMsg(millis(), 69 , 8);
+            
+            for(int i = 0; i < 9; i++)
+            {
+                uint32_t state_timestamp = millis();
+                while(millis() - state_timestamp < 5) {}
+                sendMsg(state[i], state_timestamp, i);
             }
+            
+            
             
             
             // Clear valid bits and zero the data if needed
@@ -259,6 +191,7 @@ int main ( void )
             GPS_valid[0] = 0;
             GPS_valid[1] = 0;
             GPS_valid[2] = 0;
+            GPS_valid[3] = 0;
             GPS_data[0] = 0;
             GPS_data[1] = 0;
             GPS_data[2] = 0;
@@ -305,6 +238,7 @@ void can_msg_handle(uintptr_t context)
             last_minutes = can_rx_buffer[4];
             last_seconds = can_rx_buffer[5];
             last_deciseconds = can_rx_buffer[6];
+            GPS_valid[3] = 1;
             break;
         case MSG_GPS_LATITUDE:
             // deciminute is 4 digits after minute
@@ -398,5 +332,63 @@ uint32_t millis(void) {
     uint32_t res = millis_counter;
     TMR2_InterruptEnable();
     return res;
+}
+
+void sendMsg(double time, double message, u_int8_t datatype){
+
+    const u_int8_t len = 7;
+
+    u_int8_t data[len];
+    
+    time *= 1000;
+
+    // 24-bit timestamp in milliseconds
+    // Top 8 bits are left empty
+    u_int32_t wholetime = time;
+
+    data[0] = (wholetime >> 16) & 0xff;     // 00000000 (01234567) 01234567  01234567
+    data[1] = (wholetime >> 8) & 0xff;      // 00000000  01234567 (01234567) 01234567
+    data[2] = (wholetime >> 0) & 0xff;      // 00000000  01234567  01234567 (01234567)
+
+    // 4 digits behind dec point
+    message *= 1000;
+    int32_t msg = message;
+
+    data[3] = (msg >> 24) & 0xff;
+    data[4] = (msg >> 16) & 0xff;
+    data[5] = (msg >> 8) & 0xff;
+    data[6] = (msg >> 0) & 0xff;
+
+
+    switch (datatype) {
+        case KALMAN_X:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_X, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_Y:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_Z:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Z, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_XV:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XV, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_YV:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YV, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_ZV:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZV, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_XA:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XA, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_YA:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YA, len, data, fifoNum, msgAttr);
+            break;
+        case KALMAN_ZA:
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZA, len, data, fifoNum, msgAttr);
+            break;
+    }
+
 }
 
