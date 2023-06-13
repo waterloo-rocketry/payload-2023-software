@@ -65,6 +65,9 @@ void update_rotation_filter(double new_time, double angular_velocity){
 }
 
 double get_orientation() { return x_sl[0]; }
+double get_angular_velocity() { return x_sl[1]; }
+
+
 
 
 
@@ -188,6 +191,13 @@ void update_velocity_filter(double new_time, double x, double a_x, double y, dou
 
   KalmanIterate(&velocityEntity, velPredParams, velCtrlParams, velSnsrReadings);
 }
+
+void set_control_vector(double dax, double day, double daz) {
+  u_inp[0] = dax;
+  u_inp[1] = day;
+  u_inp[2] = daz;
+}
+
 
 double velocity[3];
 double* get_velocity() {
