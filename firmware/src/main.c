@@ -58,6 +58,7 @@ uint16_t timestamp;
 uint32_t id;
 CAN_MSG_RX_ATTRIBUTE frame_type;
 
+bool injection_started = 0;
 bool recvZ = 0;
 
 
@@ -75,16 +76,14 @@ int last_deciseconds = 0;
 // initial times are 0 if not set yet, times are -1 if they are not set yet
 double GPS_time = -1;
 double GPS_time_initial = 0;
-double IMU_time = -1;
-double IMU_time_initial = 0;
-double timeGyro = -1;
 
 //double GPS_time = -1; // Keeps track of last MSG_GPS_TIMESTAMP
 double GPS_data_initial[3] = {-1, -1, -1};
 double GPS_data[3] = {-1,-1,-1}; // Lat Lon Alt
-u_int8_t GPS_valid[4] = {0,0,0,0};
+u_int8_t GPS_valid[3] = {0,0,0};
 double IMU_data[3] = {-1,-1,-1}; // Accel XYZ 
 u_int8_t IMU_count[3] = {0,0,0};
+bool updated_rotation = 0;
 
 double lat, lon, altitude, x_acc, y_acc, z_acc, z_ang;
 uint16_t alt, xa, ya, za, dmin, zg;
@@ -133,10 +132,11 @@ int main ( void )
     //CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_GENERAL_BOARD_STATUS, 4, status, 0, 0);
     while ( true )
     {
-        if (recvZ && IMU_time_initial){
+        if (recvZ && GPS_time > -1){
             recvZ = 0;
-            update_rotation_filter(timeGyro, z_ang);
+            update_rotation_filter(GPS_time, z_ang);
             //sendMsg(timeGyro, get_orientation() , 8);
+            updated_rotation = 1;
         }
 
         if((millis() - last_millis) > MILLIS_STUFF)
@@ -150,7 +150,7 @@ int main ( void )
         SYS_Tasks ( );
         
         // If we have GPS do KalmanIterate
-        if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2] && GPS_valid[3] && IMU_count[0] && IMU_count[1] && IMU_count[2]){
+        if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2] && IMU_count[0] && IMU_count[1] && IMU_count[2] && injection_started && updated_rotation){
             
             // Find averages
             IMU_data[0] /= IMU_count[0];
@@ -203,6 +203,7 @@ int main ( void )
             GPS_data[0] = 0;
             GPS_data[1] = 0;
             GPS_data[2] = 0;
+            updated_rotation = 0;
         }
     }
 
@@ -313,7 +314,6 @@ void can_msg_handle(uintptr_t context)
             IMU_count[0] ++;
             IMU_count[1] ++;
             IMU_count[2] ++;
-            IMU_time = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001 - IMU_time_initial;
             break;
         
         // dps
@@ -323,16 +323,16 @@ void can_msg_handle(uintptr_t context)
             z_ang = to_radians((double)zg/16.4); // +-2000 dps to radians             
             // dps to rps
 
-            timeGyro = ((u_int16_t)can_rx_buffer[0] << 8 | (uint16_t)can_rx_buffer[1])*0.001 - IMU_time_initial;
             recvZ = 1;
 
             break;
         case MSG_ACTUATOR_CMD:
             if (can_rx_buffer[3] == ACTUATOR_INJECTOR_VALVE){
-                GPS_time = 0;
-                IMU_time = 0;
-                GPS_time_initial = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001;    
-                IMU_time_initial = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001;    
+                if (!injection_started){
+                    GPS_time = 0;
+                    GPS_time_initial = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001;
+                }
+                injection_started = 1;
             }
             break;
     }
