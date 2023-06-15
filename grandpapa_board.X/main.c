@@ -169,7 +169,7 @@ static void can_msg_handler(const can_msg_t *msg) {
                 // (dis)connect from 12V
                 POWER_12V_SET(act_state == ACTUATOR_ON);
             }
-            else if (act_id == ACTUATOR_PAYLOAD_CANBUS) { // TODO: this needs to be added onto canlib
+            else if (act_id == ACTUATOR_PAYLOAD_5V) { // TODO: this needs to be added onto canlib
                 if (act_state != ACTUATOR_ON && act_state != ACTUATOR_OFF) {
                     return;
                 }
@@ -181,7 +181,21 @@ static void can_msg_handler(const can_msg_t *msg) {
                 send_mcp_msg(msg);
             }
             break;
+            
+        case MSG_GPS_TIMESTAMP:
+            send_mcp_msg(msg);
+            break;
+        case MSG_GPS_LATITUDE:
+            send_mcp_msg(msg);
+            break;
+        case MSG_GPS_LONGITUDE:
+            send_mcp_msg(msg);
+            break;
+        case MSG_GPS_ALTITUDE:
+            send_mcp_msg(msg);
+            break;
 
+          
     case MSG_LEDS_ON:
         WHITE_LED_SET(true);
         RED_LED_SET(true);
@@ -236,6 +250,9 @@ static void mcp_can_msg_handler(const can_msg_t *msg) {
 
     // ignore messages that were sent from this board
     if (get_board_unique_id(msg) == BOARD_ID) {
+        return;
+    }
+    else if (get_board_unique_id(msg) == BOARD_ID_ACTUATOR_CAM1){
         return;
     }
 
