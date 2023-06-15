@@ -362,7 +362,7 @@ uint32_t millis(void) {
 
 void sendMsg(double time, double message, u_int8_t datatype){
 
-    const u_int8_t len = 7;
+    const u_int8_t len = 8;
 
     u_int8_t data[len];
     
@@ -388,31 +388,40 @@ void sendMsg(double time, double message, u_int8_t datatype){
 
     switch (datatype) {
         case KALMAN_X:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_X, len, data, fifoNum, msgAttr);
+            data[7] = 0;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_Y:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Y, len, data, fifoNum, msgAttr);
+            data[7] = 1;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_Z:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_Z, len, data, fifoNum, msgAttr);
+            data[7] = 2;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_XV:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XV, len, data, fifoNum, msgAttr);
+            data[7] = 3;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_YV:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YV, len, data, fifoNum, msgAttr);
+            data[7] = 4;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_ZV:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZV, len, data, fifoNum, msgAttr);
+            data[7] = 5;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_XA:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_XA, len, data, fifoNum, msgAttr);
+            data[7] = 6;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_YA:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_YA, len, data, fifoNum, msgAttr);
+            data[7] = 7;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
         case KALMAN_ZA:
-            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST_ZA, len, data, fifoNum, msgAttr);
+            data[7] = 8;
+            CAN2_MessageTransmit(BOARD_UNIQUE_ID | MSG_STATE_EST, len, data, fifoNum, msgAttr);
             break;
     }
 
