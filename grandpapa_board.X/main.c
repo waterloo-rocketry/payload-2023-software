@@ -16,9 +16,11 @@
 // Our stuff
 #include "spi_shit.h"
 #include "platform.h"
+#include "adcc.h"
 
 // MPLAB Stuff
 #include <xc.h> //should be after any pragma statements
+#include "error_checks.h"
 #include "interrupt_manager.h"
 #define _XTAL_FREQ 12000000 // Base clock freq is 12 MHz
 #define _MCP_FREQ 6000000   // Base clock freq is 12 MHz
@@ -59,6 +61,10 @@ void main(void) {
     INTERRUPT_GlobalInterruptEnable();
     spi_init();
     papa_init();
+    
+    // Enable ADC
+    ADCC_Initialize();
+    ADCC_DisableContinuousConversion();
 
     // Config for internal CAN controller
     // Set pin RB3 as CAN Rx
@@ -104,6 +110,12 @@ void main(void) {
     // main event loop
     bool heartbeat = true;
     while (1) {
+        bool status_ok = true;
+        status_ok &= check_battery_voltage_error();
+        status_ok &= check_bus_current_error();
+        
+        if (status_ok) { send_status_ok(); }
+        
         if (millis() - last_millis > MAX_LOOP_TIME_DIFF_ms) {
             // update our loop counter
             last_millis = millis();
