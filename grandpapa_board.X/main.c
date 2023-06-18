@@ -110,12 +110,6 @@ void main(void) {
     // main event loop
     bool heartbeat = true;
     while (1) {
-        bool status_ok = true;
-        status_ok &= check_battery_voltage_error();
-        status_ok &= check_bus_current_error();
-        
-        if (status_ok) { send_status_ok(); }
-        
         if (millis() - last_millis > MAX_LOOP_TIME_DIFF_ms) {
             // update our loop counter
             last_millis = millis();
@@ -124,9 +118,10 @@ void main(void) {
             WHITE_LED_SET(heartbeat);
             heartbeat = !heartbeat;
 
-            // can_msg_t board_stat_msg;
-            // build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);
-            // send_mcp_msg(&board_stat_msg);
+            bool status_ok = true;
+            status_ok &= check_battery_voltage_error();
+            status_ok &= check_payload_bus_current_error();
+            if (status_ok) { send_status_ok(); }
         }
 
         // need to manually check for payloadCAN messages (theres no interrupt)
@@ -157,7 +152,6 @@ static void __interrupt() interrupt_handler(void) {
 
 static void can_msg_handler(const can_msg_t *msg) {
     // this function is passed to canlib when we initialize it
-    // When we call the generic canlib function "can_handle_interrupt", it calls this function which defines our board-specific behaviours
     uint16_t msg_type = get_message_type(msg);
 
     // ignore messages that were sent from this board
@@ -179,14 +173,14 @@ static void can_msg_handler(const can_msg_t *msg) {
                     return;
                 }
                 // (dis)connect from 12V
-                POWER_12V_SET(act_state == ACTUATOR_ON);
+                else POWER_12V_SET(act_state == ACTUATOR_ON);
             }
             else if (act_id == ACTUATOR_PAYLOAD_5V) { // TODO: this needs to be added onto canlib
                 if (act_state != ACTUATOR_ON && act_state != ACTUATOR_OFF) {
                     return;
                 }
                 // turn on/off PayloadCAN
-                CAN_5V_SET(act_state == ACTUATOR_ON);
+                else CAN_5V_SET(act_state == ACTUATOR_ON);
             }
             else if (act_id == ACTUATOR_INJECTOR_VALVE) {
                 // rocket is flying, relay this message to PayloadCAN for Kalman board
