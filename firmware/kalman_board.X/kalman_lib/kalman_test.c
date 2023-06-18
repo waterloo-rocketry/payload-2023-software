@@ -1,3 +1,4 @@
+/*
 #include "data.h"
 #include "orientation_conversion.h"
 #include <stdio.h>
@@ -81,3 +82,4 @@ X Acceleration Measured, Y Acceleration Measured, Z Acceleration Measured\n"
     }
     
 }
+*/
