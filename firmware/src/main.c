@@ -35,6 +35,7 @@
 #include "../kalman_board.X/kalman_lib/data.h"
 #include "../kalman_board.X/kalman_lib/gps_conversion.h"
 #include "../kalman_board.X/kalman_lib/orientation_conversion.h"
+#include "../kalman_board.X/kalman_lib/ordata.h"
 
 
 // *****************************************************************************
@@ -58,7 +59,26 @@ uint16_t timestamp;
 uint32_t id;
 CAN_MSG_RX_ATTRIBUTE frame_type;
 
+// control logic
+
 bool injection_started = 0;
+uint32_t injection_timestamp = 0;
+double z_vec[] = {0, 0, 1};
+double a_x = 0;
+double a_y = 0;
+double a_z = 0;
+int last_found_time_stamp = 0;
+
+int find_time_stamp(uint32_t t) {
+    for(; last_found_time_stamp < 1000; ++last_found_time_stamp) {
+        if (time_stamps[last_found_time_stamp] * 1000 >= t) {
+            return last_found_time_stamp;
+        }
+    }
+    
+    return 1000;
+}
+
 bool recvZ = 0;
 
 
@@ -66,12 +86,10 @@ bool recvZ = 0;
 
 // Unit stanadardization:
 // Time is in seconds
-/*
 int last_hours = 0;
 int last_minutes = 0;
 int last_seconds = 0;
 int last_deciseconds = 0;
-*/
 
 // initial times are 0 if not set yet, times are -1 if they are not set yet
 double GPS_time = -1;
@@ -150,7 +168,7 @@ int main ( void )
         SYS_Tasks ( );
         
         // If we have GPS do KalmanIterate
-        if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2] && IMU_count[0] && IMU_count[1] && IMU_count[2] && injection_started && updated_rotation){
+        if (GPS_valid[0] && GPS_valid[1] && GPS_valid[2] && IMU_count[0] && IMU_count[1] && IMU_count[2] && updated_rotation){
             
             // Find averages
             IMU_data[0] /= IMU_count[0];
@@ -160,8 +178,32 @@ int main ( void )
             GPS_data[0] /= GPS_valid[0];
             GPS_data[1] /= GPS_valid[1];
             GPS_data[2] /= GPS_valid[2];
+            
+            if (injection_started) {
+                if (!injection_timestamp) {
+                    injection_timestamp = GPS_time; //injector timestamp
+                }
+                int or_timestamp = find_time_stamp(injection_timestamp); // ZERO IT
+                set_control_vector(
+                        accel_data[or_timestamp][0] - a_x,
+                        accel_data[or_timestamp][1] - a_y,
+                        accel_data[or_timestamp][2] - a_z);
+                
+                a_x = accel_data[or_timestamp][0];
+                a_y = accel_data[or_timestamp][1];
+                a_z = accel_data[or_timestamp][2];
+            } else {
+                injection_timestamp = 0;
+                set_control_vector(0, 0, 0);
+            }
+            
+            struct Vector vel;
 
-            struct Vector vel = (struct Vector) {get_velocity(), 3};
+            if (injection_started) {
+                vel = (struct Vector) {get_velocity(), 3};
+            } else {
+                vel = (struct Vector) {z_vec, 3};
+            }
 
             struct Matrix Conv = reference_frame_correction(vel, get_orientation(), conv);
             
@@ -171,7 +213,12 @@ int main ( void )
             // GPS Conv (coords to meters)
             double gpsX = 0;
             double gpsY = 0;
-            gps_conversion(GPS_data_initial[0], GPS_data_initial[1], GPS_data[0], GPS_data[1], &gpsX, &gpsY);
+            
+            // 32.94, -106.92
+            const double SA_X = 20;
+            const double SA_Y = 20;
+            
+            gps_conversion(SA_X, SA_Y, GPS_data[0], GPS_data[1], &gpsX, &gpsY); // FIX THIS
 
             // timestamp, GPS_value[0], acc[0] ......
             update_velocity_filter(GPS_time, gpsX, A_corr.data[0], gpsY, A_corr.data[1], GPS_data[2], A_corr.data[2]);
@@ -185,7 +232,7 @@ int main ( void )
             {
                 uint32_t state_timestamp = millis();
                 while(millis() - state_timestamp < 5) {}
-                sendMsg(state[i], state_timestamp, i);
+                sendMsg(GPS_time, state[i], i);
             }
             
             
@@ -232,8 +279,11 @@ void can_msg_handle(uintptr_t context)
             LATJbits.LATJ7 = 1;
             LATKbits.LATK7 = 1;
             break;
-        case MSG_GPS_TIMESTAMP:
-            break;
+            
+        // REDO ZERO GPS
+        // SET ZERO TO WHITESAND
+
+        case MSG_GPS_TIMESTAMP:               
             /*
             if (GPS_time == -1){
                 // To be actuated
@@ -250,52 +300,59 @@ void can_msg_handle(uintptr_t context)
             last_seconds = can_rx_buffer[5];
             last_deciseconds = can_rx_buffer[6];
             GPS_valid[3] = 1;
-            break;
             */
+            break;
         case MSG_GPS_LATITUDE:
+            
             // deciminute is 4 digits after minute
             // current data reading
-            lat = can_rx_buffer[3] * 60 + can_rx_buffer[4];
+            lat = can_rx_buffer[3] + can_rx_buffer[4]/60;
             dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
-            lat += dmin*0.001;
+            lat += (dmin*0.001)/60;
 
             GPS_data[0] = lat;
 
             // Record initial
-            if (GPS_time == -1){
+            // Initial is gone
+            /*if (GPS_time == -1){
                 GPS_data_initial[0] = GPS_data[0];
             }
+              */
             GPS_valid[0] = 1;
-            if (GPS_time != -1)
-                GPS_time = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001 - GPS_time_initial;
+            
+            //if (GPS_time != -1)
+            GPS_time = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001; //We are okay with cumulative // - GPS_time_initial;
             break;
         case MSG_GPS_LONGITUDE:
             // deciminute is 4 digits after minute
             // current data reading
-            lon = can_rx_buffer[3] * 60 + can_rx_buffer[4];
+            lon = can_rx_buffer[3] + (double) can_rx_buffer[4] / 60;
             dmin = (((u_int16_t)can_rx_buffer[5]) << 8) | (u_int16_t)can_rx_buffer[6];
-            lon += dmin*0.001;
+            lon += (dmin*0.001)/60;
 
             GPS_data[1] = lon;
 
             // Record initial
+            // Same as abv
+            /*
             if (GPS_time == -1){
                 GPS_data_initial[0] = GPS_data[0];
             }
+             */
             GPS_valid[1] = 1;
-            if (GPS_time != -1)
-                GPS_time = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001 - GPS_time_initial;
+            //if (GPS_time != -1)
+            GPS_time = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001; //- GPS_time_initial;
             break;
         case MSG_GPS_ALTITUDE:
             alt = (((uint16_t)can_rx_buffer[3] << 8 | (uint16_t)can_rx_buffer[4]));
             altitude = alt + 0.01*(can_rx_buffer[6]);
-            if (GPS_data_initial[2] == -1){
+            /*if (GPS_data_initial[2] == -1){
                 GPS_data_initial[2] = altitude;
-            }
+            }*/
             GPS_data[2] = altitude - GPS_data_initial[2];
             GPS_valid[2] = 1;
-            if (GPS_time != -1)
-                GPS_time = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001 - GPS_time_initial;
+            //if (GPS_time != -1)
+            GPS_time = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001; //- GPS_time_initial;
             break;
 
         // ICM-20948
@@ -327,11 +384,12 @@ void can_msg_handle(uintptr_t context)
 
             break;
         case MSG_ACTUATOR_CMD:
+            
             if (can_rx_buffer[3] == ACTUATOR_INJECTOR_VALVE){
-                if (!injection_started){
+                /*if (!injection_started){
                     GPS_time = 0;
                     GPS_time_initial = ((u_int32_t)can_rx_buffer[0] << 16 | (uint32_t)can_rx_buffer[1] << 8 | (uint32_t)can_rx_buffer[2])*0.001;
-                }
+                }*/
                 injection_started = 1;
             }
             break;
@@ -365,12 +423,10 @@ void sendMsg(double time, double message, u_int8_t datatype){
     const u_int8_t len = 8;
 
     u_int8_t data[len];
-    
-    time *= 1000;
 
     // 24-bit timestamp in milliseconds
     // Top 8 bits are left empty
-    u_int32_t wholetime = time;
+    u_int32_t wholetime = (u_int32_t) (time * 1000);
 
     data[0] = (wholetime >> 16) & 0xff;     // 00000000 (01234567) 01234567  01234567
     data[1] = (wholetime >> 8) & 0xff;      // 00000000  01234567 (01234567) 01234567

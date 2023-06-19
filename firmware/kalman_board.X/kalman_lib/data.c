@@ -32,7 +32,7 @@ double* H_arrl[1] = {h1l};
 struct Matrix H_lat = (struct Matrix) {H_arrl, 1, 2};
 
 // Sensor uncertainty
-double r0l[1] = {1};
+double r0l[1] = {0.004386490845};
 double* R_arrl[2] = {r0l};
 struct Matrix R_lat = (struct Matrix) {R_arrl, 1, 1};
 
@@ -141,12 +141,12 @@ struct Matrix H_vel = (struct Matrix) {H_arr, 6, 9};
 // Sensor Uncertainty
 // Covariances assumed to be 0, values
 // may be adjusted lated
-double r0[6] = {1,0,0,0,0,0};
-double r1[6] = {0,1,0,0,0,0};
-double r2[6] = {0,0,1,0,0,0};
-double r3[6] = {0,0,0,1,0,0};
-double r4[6] = {0,0,0,0,1,0};
-double r5[6] = {0,0,0,0,0,1};
+double r0[6] = {13.51643599,0,0,0,0,0};
+double r1[6] = {0,0.008869118976,0,0,0,0};
+double r2[6] = {0,0,13.51643599,0,0,0};
+double r3[6] = {0,0,0,0.008869118976,0,0};
+double r4[6] = {0,0,0,0,13.51643599,0};
+double r5[6] = {0,0,0,0,0,0.008869118976};
 double* R_arr[6] = {r0, r1, r2, r3, r4, r5};
 struct Matrix R_vel = (struct Matrix) {R_arr, 6, 6};
 
